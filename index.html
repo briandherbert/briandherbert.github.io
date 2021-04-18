@@ -77,10 +77,13 @@
 
             <br>
             <div id="enableSound">
-                <button onclick='playChime(true)' ; style="background-color: black; color: gray;">Enable sound</button>
+                <button onclick='playChime(true)' ; hidden=true; style="background-color: black; color: gray;">Enable sound</button>
             </div>
 
-            <div style="height: 50vh;"></div>
+            <iframe id="specialFrame" src="about:blank"
+            allowtransparency="true"
+            style=" border:0px solid black; height: 60%; width: 100%; overflow: hidden;"></iframe>
+
             <div class="nextRoutineInfo">Next:</div>
             <div id="nextRoutineDate" class="nextRoutineInfo">_</div>
             <div id="nextRoutineName" class="nextRoutineInfo">_</div>
@@ -100,10 +103,12 @@
     </div>
 
     <script>
-        // aws s3 cp ./index.html s3://creative-tech-misc/routiner/dash.html --metadata-directive 'REPLACE' --acl public-read
-        // https://creative-tech-misc.s3.amazonaws.com/routiner/dash.html
+        // Using git pages https://briandherbert.github.io/
         // https://demille.github.io/url-cast-receiver/
         // ^^ manages to cast all
+
+        // you can embed specific slide with url param:
+        // https://docs.google.com/presentation/d/e/2PACX-1vRXFNB3B-jYa_Mk7GVONkm0Smkfe7RuEsgZQpe22EBE7uWWhMx-rMW32jqsyQNvC4qzWnIsTQyV014S/embed?start=false&loop=false&slide=id.gd0c3bf7b93_0_0
 
         window.onload = function () {
             console.log("url data " + window.location.href);
@@ -137,11 +142,25 @@ chore ceremony,sa,12:00 PM,`;
 
         var events = [];
 
+        var specials = [];
+
         var isSoundEnabled = false;
+
+        var dayOfMonth = 0;
+        var monthNum = 0;
+
+        var processedSpecials = false;
+        
 
         // Use sample data
         function localProcessData() {
             processData(responseText);
+        }
+
+        function initDate() {
+            date = Date.getDate();
+            dayOfMonth = date.getDate();
+            monthNum = date.getMonth();
         }
 
 
@@ -191,6 +210,10 @@ chore ceremony,sa,12:00 PM,`;
                 line => {
 
                     var daysStr = String(line[idxDays]).toLowerCase();
+
+                    parseDayStrForSpecial(daysStr, line[idxUrl]);
+                    console.log("found specials " + specials.toString());
+
                     dayIndices = getDayIndices(daysStr);
                     dayIndices.forEach(idx => {
                         var timeStr = line[idxTime];
@@ -208,6 +231,27 @@ chore ceremony,sa,12:00 PM,`;
             events.sort();
 
             events.forEach(event => { console.log("Event " + event) })
+        }
+
+        function checkForSpecialDay(daysStr, url) {
+            specials.forEach(specialStr => { 
+                    parts = specialStr.split(",");
+                    specialDateParts = parts[0].split("/");
+                    specialMonthNum = parseInt(specialDateParts[0]);
+                    specialDayNum = parseInt(specialDateParts[1]);
+
+                    if (monthNum + 1 == specialMonthNum && dayOfMonth == specialDayNum) {
+                        console.log("Today is a special!");
+                        document.getElementById("specialFrame").src = parts[1];
+                    }
+                 }
+                 );
+        }
+
+        function parseDayStrForSpecial(daysStr, url) {
+            if (daysStr.match(/\d+\/\d+/)) {
+                specials.push(daysStr + "," + url);
+            }
         }
 
         function getSortableTimeString(timeStr) {
@@ -253,7 +297,7 @@ chore ceremony,sa,12:00 PM,`;
                     }
                 }
             }
-            )
+            );
 
             console.log("Day str " + daysStr + " yielded indices " + dayIndices.toString());
             return dayIndices;
@@ -331,7 +375,18 @@ chore ceremony,sa,12:00 PM,`;
 
             var dayIdx = date.getDay();
             dayName = DAYS_LIST[dayIdx];
-            var monthName = MONTHS_LIST[date.getMonth()];
+
+            monthName = MONTHS_LIST[monthNum];
+
+            // Check for new day
+            if (dayOfMonth != date.getDate()) {
+                dayOfMonth = date.getDate();
+                monthNum = date.getMonth();
+
+                console.log("New day! Month " + monthNum.toString() + " day " + dayOfMonth.toString() + " specials " + specials.toString());
+                checkForSpecialDay();
+                
+            }
 
             // Display the result in the element with id="demo"
 
@@ -342,11 +397,11 @@ chore ceremony,sa,12:00 PM,`;
             document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:") + " " + date.getSeconds();
 
             document.getElementById("day").innerHTML = dayName;
-            document.getElementById("date").innerHTML = monthName + " " + date.getDate();
+            document.getElementById("date").innerHTML = monthName + " " + dayOfMonth;
 
             if (seconds % 60 == 0 || (currentEvent == null && events.length > 0)) {
                 if (timeStr.startsWith("01:00") && "AM" in timeStr) {
-                    // reset at midnight
+                    // fetch data at 1am
                     loadDoc();
                     return;
                 }
@@ -374,7 +429,6 @@ chore ceremony,sa,12:00 PM,`;
 
                 }
             }
-
         }, 1000);
 
     </script>
