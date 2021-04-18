@@ -1,0 +1,382 @@
+<html>
+
+<head>
+
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 0%;
+            width: 100%;
+            height: 100%;
+        }
+
+        div.date {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        div.time {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .nextRoutineInfo {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #routine {
+            width: 80%;
+            text-align: center;
+            margin: auto;
+        }
+
+        #routineName {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .topheight {
+            height: 50;
+        }
+
+        .column {
+            float: left;
+            height: 100%;
+            /*display: inline-block;*/
+
+            /* Should be removed. Only for demonstration */
+        }
+
+        .left {
+            text-indent: 50px;
+            width: 25%;
+        }
+
+        .right {
+            width: 75%;
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="row">
+        <div class="column left" style="background-color:rgb(53, 53, 53);;">
+            <div class="topheight"></div>
+
+            <div id="day" class="date">_</div><br>
+            <div id="date" class="date">_</div><br>
+            <div id="time" class="time">_</div>
+
+            <br>
+            <div id="enableSound">
+                <button onclick='playChime(true)' ; style="background-color: black; color: gray;">Enable sound</button>
+            </div>
+
+            <div style="height: 50vh;"></div>
+            <div class="nextRoutineInfo">Next:</div>
+            <div id="nextRoutineDate" class="nextRoutineInfo">_</div>
+            <div id="nextRoutineName" class="nextRoutineInfo">_</div>
+
+        </div>
+        <div class="column right" style="background-color:black">
+            <div id="routine">
+                <div class="topheight"></div>
+                <div id="routineName">Loading</div>
+                <br>
+                <iframe id="contentFrame"
+                    style="border:0px solid black; height: 80%; width: 100%; overflow: hidden;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // aws s3 cp ./index.html s3://creative-tech-misc/routiner/dash.html --metadata-directive 'REPLACE' --acl public-read
+        // https://creative-tech-misc.s3.amazonaws.com/routiner/dash.html
+        // https://demille.github.io/url-cast-receiver/
+        // ^^ manages to cast all
+
+        window.onload = function () {
+            console.log("url data " + window.location.href);
+            //localProcessData();
+            loadDoc();
+            d.innerHTML = "replaced";
+        };
+
+        window._setTimeout = window.setTimeout;
+        window.setTimeout = function (a, b) {
+            // disable setTimeout so chromecast won't kill us after 5 minutes...
+        };
+
+        var responseText = `Name,Days,Time,Url
+School morn,week,8:00 AM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
+Bedtime,week,7:00 PM,
+church,su,8:30 AM,
+chore ceremony,sa,12:00 PM,`;
+
+        var DASH_URL = "https://creative-tech-misc.s3.amazonaws.com/routiner/dash.html"
+
+        var DAYS_LIST = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        var WEEKDAYS = DAYS_LIST.slice(1, 6);
+        var WEEKEND = ["Sunday", "Saturday"];
+        var MONTHS_LIST = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        var routines = [];
+        var idxName = 0;
+        var idxDays = 1;
+        var idxTime = 2;
+        var idxUrl = 3;
+
+        var events = [];
+
+        var isSoundEnabled = false;
+
+        // Use sample data
+        function localProcessData() {
+            processData(responseText);
+        }
+
+
+        // Load the data
+        function loadDoc() {
+            console.log("Loading doc");
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    document.getElementById("routineName").innerHTML =
+                        "processing...";
+                    processData(this.responseText);
+                }
+            };
+
+            var dataUrl = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv"
+
+            // test local
+            var proxy = "https://cors-anywhere.herokuapp.com/"
+            //proxy = ""
+            xhttp.open("GET", proxy + dataUrl, true);
+            xhttp.crossDomain = true;
+            xhttp.send();
+        }
+
+        function processData(allText) {
+            var allTextLines = allText.split(/\r\n|\n/);
+            var headers = allTextLines[0].split(',');
+            var lines = [];
+
+            for (var i = 1; i < allTextLines.length; i++) {
+                var data = allTextLines[i].split(',');
+                if (data.length == headers.length) {
+
+                    var tarr = [];
+                    for (var j = 0; j < headers.length; j++) {
+                        tarr.push(data[j]);
+                    }
+                    lines.push(tarr);
+                }
+            }
+            document.getElementById("routineName").innerHTML = "processing...";
+            console.log(lines);
+
+            // Multiply out routines per day, formatting them in string-sortable format
+            lines.forEach(
+                line => {
+
+                    var daysStr = String(line[idxDays]).toLowerCase();
+                    dayIndices = getDayIndices(daysStr);
+                    dayIndices.forEach(idx => {
+                        var timeStr = line[idxTime];
+                        var time = getSortableTimeString(timeStr)
+
+                        events.push(idx.toString() + time + "," + line[idxName] + "," + line[idxUrl]);
+                    });
+
+                    dayOfWeekIdx = 0;
+
+                }
+            )
+
+            // Sort by string
+            events.sort();
+
+            events.forEach(event => { console.log("Event " + event) })
+        }
+
+        function getSortableTimeString(timeStr) {
+            // Split off AM / PM
+            timeParts = timeStr.split(" ")
+            var time = timeParts[1]
+
+            // Split hour min
+            hourMin = timeParts[0].split(":");
+            hour = hourMin[0]
+
+            // double digits
+            if (timeParts[0].length < 5) {
+                time += "0";
+            }
+
+            time += timeParts[0];
+
+            time = time.replace("M12:", "M00:")
+
+            console.log("Time str " + timeStr + " sortable " + time);
+            return time;
+        }
+
+        function getDayIndices(daysStr) {
+            var days = [];
+            var dayIndices = []
+
+            if (daysStr == "all") {
+                days = DAYS_LIST;
+            } else if (daysStr == "week") {
+                days = WEEKDAYS;
+            } else if (daysStr == "wkend") {
+                days = WEEKEND
+            } else {
+                days = daysStr.replace(" ", "").split(",");
+            }
+            days.forEach(d => {
+                for (var i = 0; i < DAYS_LIST.length; i++) {
+                    if (DAYS_LIST[i].toLowerCase().startsWith(d.toLowerCase())) {
+                        dayIndices.push(i);
+                        break;
+                    }
+                }
+            }
+            )
+
+            console.log("Day str " + daysStr + " yielded indices " + dayIndices.toString());
+            return dayIndices;
+        }
+
+        function setCurrentEvent(currentStr, nextStr) {
+            if (currentEvent != currentStr) {
+                var parts = currentStr.split(",");
+                var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
+                var time = parts[0].slice(3, 5) + " " + parts[0].slice(1, 2);
+                var name = parts[1];
+                var url = parts[2];
+                console.log("url is " + url);
+
+                if (url != null) {
+                    document.getElementById("contentFrame").src = url;
+                }
+
+                currentEvent = currentStr;
+
+                document.getElementById("routineName").innerHTML = name;
+
+                setNextEvent(nextStr);
+            }
+
+            console.log("current event " + currentEvent.toString());
+        }
+
+        function setNextEvent(nextStr) {
+            var parts = nextStr.split(",");
+            var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
+            var time = parts[0].slice(3, 8) + " " + parts[0].slice(1, 3);
+            var name = parts[1];
+            var url = parts[2];
+
+            var date = time;
+
+            if (day != dayName) {
+                date = day + ", " + time;
+            }
+
+
+            document.getElementById("nextRoutineDate").innerHTML = date;
+            document.getElementById("nextRoutineName").innerHTML = name;
+        }
+
+        function playChime(fromUser) {
+            if (fromUser) {
+                isSoundEnabled = true;
+                document.getElementById("enableSound").style.display = "none";
+            }
+
+            if (isSoundEnabled) {
+                playSound("https://creative-tech-misc.s3.amazonaws.com/routiner/doorbell.mp3");
+            }
+        }
+
+        function playSound(url) {
+            var a = new Audio(url);
+            a.play();
+        }
+
+        var currentEvent;
+        var nextEvent;
+        var dayName;
+
+        // Update the count down every 1 second
+        var x = setInterval(function () {
+
+            // Get today's date and time
+            var date = new Date();
+            var now = date.getTime();
+
+            var seconds = date.getSeconds();
+
+            var dayIdx = date.getDay();
+            dayName = DAYS_LIST[dayIdx];
+            var monthName = MONTHS_LIST[date.getMonth()];
+
+            // Display the result in the element with id="demo"
+
+            var timeStr = date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
+
+            var sortableDate = dayIdx.toString() + getSortableTimeString(timeStr)
+
+            document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:") + " " + date.getSeconds();
+
+            document.getElementById("day").innerHTML = dayName;
+            document.getElementById("date").innerHTML = monthName + " " + date.getDate();
+
+            if (seconds % 60 == 0 || (currentEvent == null && events.length > 0)) {
+                if (timeStr.startsWith("01:00") && "AM" in timeStr) {
+                    // reset at midnight
+                    loadDoc();
+                    return;
+                }
+
+                playChime(false);
+                console.log("current sortable time " + sortableDate);
+                for (var i = 0; i < events.length; i++) {
+                    eventDate = events[i].split(",")[0];
+
+                    if (i == events.length - 1) {
+                        setCurrentEvent(events[0], events[0]);
+                        break;
+                    } else {
+                        nextEventDate = events[i + 1].split(",")[0];
+                        if (sortableDate >= eventDate && sortableDate < nextEventDate) {
+                            var nextIdx = i + 1;
+                            if (nextIdx >= events.length) {
+                                nextIdx = 0;
+                            }
+
+                            setCurrentEvent(events[i], events[nextIdx]);
+                            break;
+                        }
+                    }
+
+                }
+            }
+
+        }, 1000);
+
+    </script>
+</body>
+
+</html>
