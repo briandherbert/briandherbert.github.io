@@ -88,6 +88,8 @@
         </div>
         <div class="column right" style="background-color:black">
             <div id="routine">
+                <iframe src="sender.html" height="35" width="54" style="border:0px; float: right; padding: 10;"></iframe>
+
                 <div class="topheight"></div>
                 <div id="routineName">Loading</div>
                 <br>
@@ -107,7 +109,6 @@
             console.log("url data " + window.location.href);
             //localProcessData();
             loadDoc();
-            d.innerHTML = "replaced";
         };
 
         window._setTimeout = window.setTimeout;
@@ -284,7 +285,7 @@ chore ceremony,sa,12:00 PM,`;
         function setNextEvent(nextStr) {
             var parts = nextStr.split(",");
             var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
-            var time = parts[0].slice(3, 8) + " " + parts[0].slice(1, 3);
+            var time = parts[0].slice(3, 8).replace("00:", "12:") + " " + parts[0].slice(1, 3);
             var name = parts[1];
             var url = parts[2];
 
