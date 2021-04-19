@@ -1,0 +1,3 @@
+TODO:
+- Use user-agent to hide buttons on casted device
+- Seconds display?
