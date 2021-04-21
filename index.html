@@ -83,6 +83,7 @@
             <iframe id="specialFrame" src="about:blank"
             allowtransparency="true"
             style=" border:0px solid black; height: 50%; width: 100%; overflow: hidden;"></iframe>
+            <br><br>
 
             <div class="nextRoutineInfo">Next:</div>
             <div id="nextRoutineDate" class="nextRoutineInfo">_</div>
@@ -113,7 +114,9 @@
         window.onload = function () {
             console.log("url data " + window.location.href);
             //localProcessData();
+            initDate();
             loadDoc();
+            checkForSpecialDay();
         };
 
         window._setTimeout = window.setTimeout;
@@ -165,7 +168,7 @@ chore ceremony,sa,12:00 PM,`;
 
 
         // Load the data
-        function loadDoc() {
+        function loadDoc() {            
             console.log("Loading doc");
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
@@ -212,7 +215,6 @@ chore ceremony,sa,12:00 PM,`;
                     var daysStr = String(line[idxDays]).toLowerCase();
 
                     parseDayStrForSpecial(daysStr, line[idxUrl]);
-                    console.log("found specials " + specials.toString());
 
                     dayIndices = getDayIndices(daysStr);
                     dayIndices.forEach(idx => {
@@ -229,11 +231,10 @@ chore ceremony,sa,12:00 PM,`;
 
             // Sort by string
             events.sort();
-
             events.forEach(event => { console.log("Event " + event) })
         }
 
-        function checkForSpecialDay(daysStr, url) {
+        function checkForSpecialDay() {
             specials.forEach(specialStr => { 
                     parts = specialStr.split(",");
                     specialDateParts = parts[0].split("/");
@@ -250,6 +251,8 @@ chore ceremony,sa,12:00 PM,`;
 
         function parseDayStrForSpecial(daysStr, url) {
             if (daysStr.match(/\d+\/\d+/)) {
+                console.log("found specials " + daysStr);
+
                 specials.push(daysStr + "," + url);
             }
         }
