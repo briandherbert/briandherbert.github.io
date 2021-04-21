@@ -1,4 +1,5 @@
 TODO:
+- auto-toggle proxy
 - Use user-agent to hide buttons on casted device
 - Seconds display?
 - Clip away google spreadsheet footer?
