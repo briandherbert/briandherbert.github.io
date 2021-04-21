@@ -116,7 +116,6 @@
             //localProcessData();
             initDate();
             loadDoc();
-            checkForSpecialDay();
         };
 
         window._setTimeout = window.setTimeout;
@@ -183,7 +182,7 @@ chore ceremony,sa,12:00 PM,`;
 
             // test local
             var proxy = "https://cors-anywhere.herokuapp.com/"
-            proxy = ""
+            //proxy = ""
             xhttp.open("GET", proxy + dataUrl, true);
             xhttp.crossDomain = true;
             xhttp.send();
@@ -232,9 +231,11 @@ chore ceremony,sa,12:00 PM,`;
             // Sort by string
             events.sort();
             events.forEach(event => { console.log("Event " + event) })
+            checkForSpecialDay();
         }
 
         function checkForSpecialDay() {
+            console.log("checking for special days");
             specials.forEach(specialStr => { 
                     parts = specialStr.split(",");
                     specialDateParts = parts[0].split("/");
