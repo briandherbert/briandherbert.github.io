@@ -54,7 +54,7 @@
         }
 
         .left {
-            text-indent: 50px;
+            /* text-indent: 50px; */
             width: 25%;
         }
 
@@ -68,37 +68,54 @@
 <body>
 
     <div class="row">
-        <div class="column left" style="background-color:rgb(53, 53, 53);;">
+        <div class="column left" style="background-color:rgb(53, 53, 53);">
             <div class="topheight"></div>
 
-            <div id="day" class="date">_</div><br>
-            <div id="date" class="date">_</div><br>
-            <div id="time" class="time">_</div>
+            <div style="text-indent: 50px;">
+                <div id="day" class="date">_</div><br>
+                <div id="date" class="date">_</div><br>
+                <div id="time" class="time">_</div>
+            </div>
 
             <br>
             <div id="enableSound">
-                <button onclick='playChime(true)' ; hidden=true; style="background-color: black; color: gray;">Enable sound</button>
+                <button onclick='playChime(true)' ; hidden=true; style="background-color: black; color: gray;">Enable
+                    sound</button>
             </div>
 
-            <iframe id="specialFrame" src="about:blank"
-            allowtransparency="true"
-            style=" border:0px solid black; height: 50%; width: 100%; overflow: hidden;"></iframe>
+
+            <div style="width: 100%; height: 50%; position: relative; overflow: hidden; padding-left: -30;">
+                <iframe id="specialFrame" src="about:blank" allowtransparency="true"
+                    style=" border:0px solid black; height: 100%; width: 100%; overflow: hidden; left: 0;"></iframe>
+                <div
+                    style="position: relative; bottom: 36; background-color:rgb(53, 53, 53); width: 100%; height: 36px;">
+                </div>
+
+            </div>
             <br><br>
 
-            <div class="nextRoutineInfo">Next:</div>
-            <div id="nextRoutineDate" class="nextRoutineInfo">_</div>
-            <div id="nextRoutineName" class="nextRoutineInfo">_</div>
+            <div style="text-indent: 50px;">
+                <div class="nextRoutineInfo">Next:</div>
+                <div id="nextRoutineDate" class="nextRoutineInfo">_</div>
+                <div id="nextRoutineName" class="nextRoutineInfo">_</div>
+            </div>
 
         </div>
         <div class="column right" style="background-color:black">
             <div id="routine">
-                <iframe src="sender.html" height="35" width="54" style="border:0px; float: right; padding: 10;"></iframe>
+
+                <iframe src="sender.html" height="35" width="54"
+                    style="border:0px; float: right; padding: 10;"></iframe>
 
                 <div class="topheight"></div>
                 <div id="routineName">Loading</div>
                 <br>
-                <iframe id="contentFrame"
-                    style="border:0px solid black; height: 80%; width: 100%; overflow: hidden;"></iframe>
+                <div style="width: 100%; height: 80%;">
+                    <iframe id="contentFrame"
+                        style="border:0px solid black; height: 100%; width: 99%; overflow: hidden; position: relative;"></iframe>
+                    <div style="position: relative; bottom: 36; background-color: black; width: 100%; height: 36px;">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -152,7 +169,7 @@ chore ceremony,sa,12:00 PM,`;
         var monthNum = 0;
 
         var processedSpecials = false;
-        
+
 
         // Use sample data
         function localProcessData() {
@@ -167,7 +184,7 @@ chore ceremony,sa,12:00 PM,`;
 
 
         // Load the data
-        function loadDoc() {            
+        function loadDoc() {
             console.log("Loading doc");
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
@@ -236,18 +253,18 @@ chore ceremony,sa,12:00 PM,`;
 
         function checkForSpecialDay() {
             console.log("checking for special days");
-            specials.forEach(specialStr => { 
-                    parts = specialStr.split(",");
-                    specialDateParts = parts[0].split("/");
-                    specialMonthNum = parseInt(specialDateParts[0]);
-                    specialDayNum = parseInt(specialDateParts[1]);
+            specials.forEach(specialStr => {
+                parts = specialStr.split(",");
+                specialDateParts = parts[0].split("/");
+                specialMonthNum = parseInt(specialDateParts[0]);
+                specialDayNum = parseInt(specialDateParts[1]);
 
-                    if (monthNum + 1 == specialMonthNum && dayOfMonth == specialDayNum) {
-                        console.log("Today is a special!");
-                        document.getElementById("specialFrame").src = parts[1];
-                    }
-                 }
-                 );
+                if (monthNum + 1 == specialMonthNum && dayOfMonth == specialDayNum) {
+                    console.log("Today is a special!");
+                    document.getElementById("specialFrame").src = parts[1];
+                }
+            }
+            );
         }
 
         function parseDayStrForSpecial(daysStr, url) {
@@ -389,7 +406,7 @@ chore ceremony,sa,12:00 PM,`;
 
                 console.log("New day! Month " + monthNum.toString() + " day " + dayOfMonth.toString() + " specials " + specials.toString());
                 checkForSpecialDay();
-                
+
             }
 
             // Display the result in the element with id="demo"
