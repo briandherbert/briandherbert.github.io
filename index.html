@@ -25,7 +25,7 @@
 
         .nextRoutineInfo {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
         }
 
@@ -56,11 +56,16 @@
         .left {
             /* text-indent: 50px; */
             width: 25%;
+            background-color: rgb(53, 53, 53);
         }
 
         .right {
             width: 75%;
 
+        }
+
+        .sidebarColor {
+            background-color: rgb(53, 53, 53);
         }
     </style>
 </head>
@@ -68,12 +73,12 @@
 <body>
 
     <div class="row">
-        <div class="column left" style="background-color:rgb(53, 53, 53);">
+        <div class="column left">
             <div class="topheight"></div>
 
             <div style="text-indent: 50px;">
-                <div id="day" class="date">_</div><br>
-                <div id="date" class="date">_</div><br>
+                <div id="day" class="date">_</div>
+                <div id="date" class="date">_</div>
                 <div id="time" class="time">_</div>
             </div>
 
@@ -84,18 +89,18 @@
             </div>
 
 
-            <div style="width: 100%; height: 50%; position: relative; overflow: hidden; padding-left: -30;">
+            <div style="width: 100%; height: 50%; position: relative; overflow: hidden; border: rgb(53, 53, 53); ">
+                <div class="sidebarColor" style="position: absolute; top: 0; width: 100%; height: 55px;">
+                </div>
                 <iframe id="specialFrame" src="about:blank" allowtransparency="true"
                     style=" border:0px solid black; height: 100%; width: 100%; overflow: hidden; left: 0;"></iframe>
-                <div
-                    style="position: relative; bottom: 36; background-color:rgb(53, 53, 53); width: 100%; height: 36px;">
+                <div class="sidebarColor" style="position: relative; bottom: 90; width: 100%; height: 90px;">
                 </div>
-
             </div>
             <br><br>
 
             <div style="text-indent: 50px;">
-                <div class="nextRoutineInfo">Next:</div>
+                <div class="nextRoutineInfo" style="font-size: 20px;">Next:</div>
                 <div id="nextRoutineDate" class="nextRoutineInfo">_</div>
                 <div id="nextRoutineName" class="nextRoutineInfo">_</div>
             </div>
@@ -199,7 +204,7 @@ chore ceremony,sa,12:00 PM,`;
 
             // test local
             var proxy = "https://cors-anywhere.herokuapp.com/"
-            proxy = ""
+            //proxy = ""
             xhttp.open("GET", proxy + dataUrl, true);
             xhttp.crossDomain = true;
             xhttp.send();
@@ -417,8 +422,8 @@ chore ceremony,sa,12:00 PM,`;
 
             document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:") + " " + date.getSeconds();
 
-            document.getElementById("day").innerHTML = dayName;
-            document.getElementById("date").innerHTML = monthName + " " + dayOfMonth;
+            document.getElementById("day").innerHTML = "";
+            document.getElementById("date").innerHTML = dayName + ", " + monthName + " " + dayOfMonth;
 
             if (seconds % 60 == 0 || (currentEvent == null && events.length > 0)) {
                 if (timeStr.startsWith("01:00") && "AM" in timeStr) {
