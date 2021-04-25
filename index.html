@@ -204,7 +204,7 @@ chore ceremony,sa,12:00 PM,`;
 
             // test local
             var proxy = "https://cors-anywhere.herokuapp.com/"
-            //proxy = ""
+            proxy = ""
             xhttp.open("GET", proxy + dataUrl, true);
             xhttp.crossDomain = true;
             xhttp.send();
@@ -444,7 +444,10 @@ chore ceremony,sa,12:00 PM,`;
                     } else {
                         nextEventDate = events[i + 1].split(",")[0];
                         if (sortableDate >= eventDate && sortableDate < nextEventDate) {
-
+                            var nextIdx = i + 1;
+                            if (nextIdx >= events.length) {
+                                nextIdx = 0;
+                            }
 
                             setCurrentEvent(events[i], events[nextIdx]);
                             break;
