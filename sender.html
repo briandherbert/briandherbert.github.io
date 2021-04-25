@@ -193,7 +193,6 @@
     function sessionUpdateListener(isAlive) {
       if (!isAlive) {
         session = null;
-        disableInputs();
       }
       console.log('Session is alive?: ', isAlive);
     }

@@ -439,15 +439,12 @@ chore ceremony,sa,12:00 PM,`;
                     eventDate = events[i].split(",")[0];
 
                     if (i == events.length - 1) {
-                        setCurrentEvent(events[0], events[0]);
+                        setCurrentEvent(events[i], events[(i + 1) % events.length]);
                         break;
                     } else {
                         nextEventDate = events[i + 1].split(",")[0];
                         if (sortableDate >= eventDate && sortableDate < nextEventDate) {
-                            var nextIdx = i + 1;
-                            if (nextIdx >= events.length) {
-                                nextIdx = 0;
-                            }
+
 
                             setCurrentEvent(events[i], events[nextIdx]);
                             break;
