@@ -235,6 +235,14 @@ chore ceremony,sa,12:00 PM,`;
 
                     var daysStr = String(line[idxDays]).toLowerCase();
 
+                    if (daysStr == "sidebar") {
+                        // TODO
+                        console.log("Found sidebar url");
+                        document.getElementById("specialFrame").src = line[idxUrl];
+                        return;
+                    }
+
+
                     parseDayStrForSpecial(daysStr, line[idxUrl]);
 
                     dayIndices = getDayIndices(daysStr);
@@ -246,7 +254,6 @@ chore ceremony,sa,12:00 PM,`;
                     });
 
                     dayOfWeekIdx = 0;
-
                 }
             )
 
@@ -355,7 +362,7 @@ chore ceremony,sa,12:00 PM,`;
         function setNextEvent(nextStr) {
             var parts = nextStr.split(",");
             var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
-            
+
             var time = parts[0].slice(3, 8).replace("00:", "12:") + " " + parts[0].slice(1, 3);
             var name = parts[1];
             var url = parts[2];
@@ -423,7 +430,7 @@ chore ceremony,sa,12:00 PM,`;
 
             document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:") + " " + date.getSeconds();
 
-            document.getElementById("day").innerHTML = dayName ;
+            document.getElementById("day").innerHTML = dayName;
             document.getElementById("date").innerHTML = monthName + " " + dayOfMonth;
 
             if (seconds % 60 == 0 || (currentEvent == null && events.length > 0)) {
