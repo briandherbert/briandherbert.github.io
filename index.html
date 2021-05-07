@@ -159,21 +159,19 @@ chore ceremony,sa,12:00 PM,`;
         var MONTHS_LIST = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         var routines = [];
-        var idxName = 0;
-        var idxDays = 1;
-        var idxTime = 2;
-        var idxUrl = 3;
+        var CSV_IDX_NAME = 0;
+        var CSV_IDX_DAYS = 1;
+        var CSV_IDX_TIME = 2;
+        var CSV_IDX_URL = 3;
 
-        var events = [];
+        var EVENTS = [];
 
-        var specials = [];
+        var SPECIALS = [];
 
         var isSoundEnabled = false;
 
         var dayOfMonth = 0;
         var monthNum = 0;
-
-        var processedSpecials = false;
 
 
         // Use sample data
@@ -215,6 +213,8 @@ chore ceremony,sa,12:00 PM,`;
             var headers = allTextLines[0].split(',');
             var lines = [];
 
+            EVENTS = []
+
             for (var i = 1; i < allTextLines.length; i++) {
                 var data = allTextLines[i].split(',');
                 if (data.length == headers.length) {
@@ -233,24 +233,24 @@ chore ceremony,sa,12:00 PM,`;
             lines.forEach(
                 line => {
 
-                    var daysStr = String(line[idxDays]).toLowerCase();
+                    var daysStr = String(line[CSV_IDX_DAYS]).toLowerCase();
 
                     if (daysStr == "sidebar") {
                         // TODO
                         console.log("Found sidebar url");
-                        document.getElementById("specialFrame").src = line[idxUrl];
+                        document.getElementById("specialFrame").src = line[CSV_IDX_URL];
                         return;
                     }
 
 
-                    parseDayStrForSpecial(daysStr, line[idxUrl]);
+                    parseDayStrForSpecial(daysStr, line[CSV_IDX_URL]);
 
                     dayIndices = getDayIndices(daysStr);
                     dayIndices.forEach(idx => {
-                        var timeStr = line[idxTime];
+                        var timeStr = line[CSV_IDX_TIME];
                         var time = getSortableTimeString(timeStr)
 
-                        events.push(idx.toString() + time + "," + line[idxName] + "," + line[idxUrl]);
+                        EVENTS.push(idx.toString() + time + "," + line[CSV_IDX_NAME] + "," + line[CSV_IDX_URL]);
                     });
 
                     dayOfWeekIdx = 0;
@@ -258,14 +258,14 @@ chore ceremony,sa,12:00 PM,`;
             )
 
             // Sort by string
-            events.sort();
-            events.forEach(event => { console.log("Event " + event) })
+            EVENTS.sort();
+            EVENTS.forEach(event => { console.log("Event " + event) })
             checkForSpecialDay();
         }
 
         function checkForSpecialDay() {
             console.log("checking for special days");
-            specials.forEach(specialStr => {
+            SPECIALS.forEach(specialStr => {
                 parts = specialStr.split(",");
                 specialDateParts = parts[0].split("/");
                 specialMonthNum = parseInt(specialDateParts[0]);
@@ -283,7 +283,7 @@ chore ceremony,sa,12:00 PM,`;
             if (daysStr.match(/\d+\/\d+/)) {
                 console.log("found specials " + daysStr);
 
-                specials.push(daysStr + "," + url);
+                SPECIALS.push(daysStr + "," + url);
             }
         }
 
@@ -305,7 +305,6 @@ chore ceremony,sa,12:00 PM,`;
 
             time = time.replace("M12:", "M00:")
 
-            console.log("Time str " + timeStr + " sortable " + time);
             return time;
         }
 
@@ -417,9 +416,8 @@ chore ceremony,sa,12:00 PM,`;
                 dayOfMonth = date.getDate();
                 monthNum = date.getMonth();
 
-                console.log("New day! Month " + monthNum.toString() + " day " + dayOfMonth.toString() + " specials " + specials.toString());
+                console.log("New day! Month " + monthNum.toString() + " day " + dayOfMonth.toString() + " specials " + SPECIALS.toString());
                 checkForSpecialDay();
-
             }
 
             // Display the result in the element with id="demo"
@@ -433,30 +431,31 @@ chore ceremony,sa,12:00 PM,`;
             document.getElementById("day").innerHTML = dayName;
             document.getElementById("date").innerHTML = monthName + " " + dayOfMonth;
 
-            if (seconds % 60 == 0 || (currentEvent == null && events.length > 0)) {
-                if (timeStr.startsWith("01:00") && "AM" in timeStr) {
+            console.log("Time str is " + timeStr)
+            if (seconds % 60 == 0 || (currentEvent == null && EVENTS.length > 0)) {
+                if (timeStr.startsWith("01:") && timeStr.includes("AM")) {
                     // fetch data at 1am
-                    loadDoc();
+                    location.reload();
                     return;
                 }
 
                 playChime(false);
                 console.log("current sortable time " + sortableDate);
-                for (var i = 0; i < events.length; i++) {
-                    eventDate = events[i].split(",")[0];
+                for (var i = 0; i < EVENTS.length; i++) {
+                    eventDate = EVENTS[i].split(",")[0];
 
-                    if (i == events.length - 1) {
-                        setCurrentEvent(events[i], events[(i + 1) % events.length]);
+                    if (i == EVENTS.length - 1) {
+                        setCurrentEvent(EVENTS[i], EVENTS[(i + 1) % EVENTS.length]);
                         break;
                     } else {
-                        nextEventDate = events[i + 1].split(",")[0];
+                        nextEventDate = EVENTS[i + 1].split(",")[0];
                         if (sortableDate >= eventDate && sortableDate < nextEventDate) {
                             var nextIdx = i + 1;
-                            if (nextIdx >= events.length) {
+                            if (nextIdx >= EVENTS.length) {
                                 nextIdx = 0;
                             }
 
-                            setCurrentEvent(events[i], events[nextIdx]);
+                            setCurrentEvent(EVENTS[i], EVENTS[nextIdx]);
                             break;
                         }
                     }
