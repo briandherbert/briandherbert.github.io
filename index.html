@@ -132,10 +132,11 @@
 
         // you can embed specific slide with url param:
         // https://docs.google.com/presentation/d/e/2PACX-1vRXFNB3B-jYa_Mk7GVONkm0Smkfe7RuEsgZQpe22EBE7uWWhMx-rMW32jqsyQNvC4qzWnIsTQyV014S/embed?start=false&loop=false&slide=id.gd0c3bf7b93_0_0
+        // Bypass CORS w local server: python3 -m http.server 8000
+        // http://localhost:8000/
 
         window.onload = function () {
             console.log("url data " + window.location.href);
-            //localProcessData();
             initDate();
             loadDoc();
         };
@@ -158,62 +159,66 @@ chore ceremony,sa,12:00 PM,`;
         var WEEKEND = ["Sunday", "Saturday"];
         var MONTHS_LIST = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        var routines = [];
         var CSV_IDX_NAME = 0;
         var CSV_IDX_DAYS = 1;
         var CSV_IDX_TIME = 2;
         var CSV_IDX_URL = 3;
 
         var EVENTS = [];
-
         var SPECIALS = [];
+
+        var CURRENT_EVENT;
+        var CURRENT_DAY_NAME;
+
+        var CURRENT_DAY_OF_MONTH = 0;
+        var CURRENT_MONTH_NUM = 0;
 
         var isSoundEnabled = false;
 
-        var dayOfMonth = 0;
-        var monthNum = 0;
-
-
-        // Use sample data
-        function localProcessData() {
-            processData(responseText);
-        }
 
         function initDate() {
             date = new Date();
-            dayOfMonth = date.getDate();
-            monthNum = date.getMonth();
+            CURRENT_DAY_OF_MONTH = date.getDate();
+            CURRENT_MONTH_NUM = date.getMonth();
         }
 
 
         // Load the data
         function loadDoc() {
             console.log("Loading doc");
+
+            // Reset globals
+            CURRENT_EVENT = null;
+
+            // Fetch data
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
                 if (this.readyState == 4 && this.status == 200) {
-                    document.getElementById("routineName").innerHTML =
-                        "processing...";
+                    setDisplayRoutineName("processing...")
                     processData(this.responseText);
                 }
             };
 
-            var dataUrl = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv"
-
-            // test local
-            var proxy = "https://cors-anywhere.herokuapp.com/"
-            proxy = ""
-            xhttp.open("GET", proxy + dataUrl, true);
+            var dataUrl = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv&cacheBust=" + Math.random().toString()
+            xhttp.open("GET", dataUrl, true);
             xhttp.crossDomain = true;
             xhttp.send();
         }
 
+        function setDisplayRoutineName(name) {
+            console.log("Set display routine name " + name)
+            document.getElementById("routineName").innerHTML = name;
+        }
+
         function processData(allText) {
+            console.log("processData");
+
+            EVENTS = []
+            SPECIALS = []
+
             var allTextLines = allText.split(/\r\n|\n/);
             var headers = allTextLines[0].split(',');
             var lines = [];
-
-            EVENTS = []
 
             for (var i = 1; i < allTextLines.length; i++) {
                 var data = allTextLines[i].split(',');
@@ -226,7 +231,6 @@ chore ceremony,sa,12:00 PM,`;
                     lines.push(tarr);
                 }
             }
-            document.getElementById("routineName").innerHTML = "processing...";
             console.log(lines);
 
             // Multiply out routines per day, formatting them in string-sortable format
@@ -271,7 +275,7 @@ chore ceremony,sa,12:00 PM,`;
                 specialMonthNum = parseInt(specialDateParts[0]);
                 specialDayNum = parseInt(specialDateParts[1]);
 
-                if (monthNum + 1 == specialMonthNum && dayOfMonth == specialDayNum) {
+                if (CURRENT_MONTH_NUM + 1 == specialMonthNum && CURRENT_DAY_OF_MONTH == specialDayNum) {
                     console.log("Today is a special!");
                     document.getElementById("specialFrame").src = parts[1];
                 }
@@ -336,7 +340,9 @@ chore ceremony,sa,12:00 PM,`;
         }
 
         function setCurrentEvent(currentStr, nextStr) {
-            if (currentEvent != currentStr) {
+            console.log("Set event to " + currentStr + " \n current event is " + CURRENT_EVENT);
+
+            if (CURRENT_EVENT != currentStr) {
                 var parts = currentStr.split(",");
                 var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
                 var time = parts[0].slice(3, 5) + " " + parts[0].slice(1, 2);
@@ -345,20 +351,23 @@ chore ceremony,sa,12:00 PM,`;
                 console.log("url is " + url);
 
                 if (url != null) {
+                    console.log("Set content frame to " + url)
                     document.getElementById("contentFrame").src = url;
                 }
 
-                currentEvent = currentStr;
+                CURRENT_EVENT = currentStr;
 
-                document.getElementById("routineName").innerHTML = name;
+                console.log("Set routine name to " + name)
+                setDisplayRoutineName(name);
 
                 setNextEvent(nextStr);
             }
 
-            console.log("current event " + currentEvent.toString());
+            console.log("current event " + CURRENT_EVENT.toString());
         }
 
         function setNextEvent(nextStr) {
+            console.log("Set next event to " + nextStr)
             var parts = nextStr.split(",");
             var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
 
@@ -368,7 +377,7 @@ chore ceremony,sa,12:00 PM,`;
 
             var date = time;
 
-            if (day != dayName) {
+            if (day != CURRENT_DAY_NAME) {
                 date = day + ", " + time;
             }
 
@@ -393,10 +402,6 @@ chore ceremony,sa,12:00 PM,`;
             a.play();
         }
 
-        var currentEvent;
-        var nextEvent;
-        var dayName;
-
         // Update the count down every 1 second
         var x = setInterval(function () {
 
@@ -407,17 +412,18 @@ chore ceremony,sa,12:00 PM,`;
             var seconds = date.getSeconds();
 
             var dayIdx = date.getDay();
-            dayName = DAYS_LIST[dayIdx];
+            CURRENT_DAY_NAME = DAYS_LIST[dayIdx];
 
-            monthName = MONTHS_LIST[monthNum];
+            monthName = MONTHS_LIST[CURRENT_MONTH_NUM];
 
             // Check for new day
-            if (dayOfMonth != date.getDate()) {
-                dayOfMonth = date.getDate();
-                monthNum = date.getMonth();
+            if (CURRENT_DAY_OF_MONTH != date.getDate()) {
+                CURRENT_DAY_OF_MONTH = date.getDate();
+                CURRENT_MONTH_NUM = date.getMonth();
 
-                console.log("New day! Month " + monthNum.toString() + " day " + dayOfMonth.toString() + " specials " + SPECIALS.toString());
-                checkForSpecialDay();
+                console.log("New day! Month " + CURRENT_MONTH_NUM.toString() + " day " + CURRENT_DAY_OF_MONTH.toString() + " specials " + SPECIALS.toString());
+                loadDoc();
+                return;
             }
 
             // Display the result in the element with id="demo"
@@ -428,17 +434,10 @@ chore ceremony,sa,12:00 PM,`;
 
             document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:") + " " + date.getSeconds();
 
-            document.getElementById("day").innerHTML = dayName;
-            document.getElementById("date").innerHTML = monthName + " " + dayOfMonth;
+            document.getElementById("day").innerHTML = CURRENT_DAY_NAME;
+            document.getElementById("date").innerHTML = monthName + " " + CURRENT_DAY_OF_MONTH;
 
-            console.log("Time str is " + timeStr)
-            if (seconds % 60 == 0 || (currentEvent == null && EVENTS.length > 0)) {
-                if (timeStr.startsWith("01:") && timeStr.includes("AM")) {
-                    // fetch data at 1am
-                    location.reload();
-                    return;
-                }
-
+            if (seconds % 60 == 0 || (CURRENT_EVENT == null && EVENTS.length > 0)) {
                 playChime(false);
                 console.log("current sortable time " + sortableDate);
                 for (var i = 0; i < EVENTS.length; i++) {
