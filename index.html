@@ -175,6 +175,8 @@ chore ceremony,sa,12:00 PM,`;
 
         var isSoundEnabled = false;
 
+        var PROCESS;
+
 
         function initDate() {
             date = new Date();
@@ -196,6 +198,9 @@ chore ceremony,sa,12:00 PM,`;
                 if (this.readyState == 4 && this.status == 200) {
                     setDisplayRoutineName("processing...")
                     processData(this.responseText);
+                    console.log("set interval to minute");
+                    update();
+                    setInterval(update, 60000);
                 }
             };
 
@@ -381,7 +386,6 @@ chore ceremony,sa,12:00 PM,`;
                 date = day + ", " + time;
             }
 
-
             document.getElementById("nextRoutineDate").innerHTML = date;
             document.getElementById("nextRoutineName").innerHTML = name;
         }
@@ -402,19 +406,12 @@ chore ceremony,sa,12:00 PM,`;
             a.play();
         }
 
-        // Update the count down every 1 second
-        var x = setInterval(function () {
-
+        function update() {
+            console.log("Do update");
             // Get today's date and time
             var date = new Date();
-            var now = date.getTime();
-
-            var seconds = date.getSeconds();
-
             var dayIdx = date.getDay();
             CURRENT_DAY_NAME = DAYS_LIST[dayIdx];
-
-            monthName = MONTHS_LIST[CURRENT_MONTH_NUM];
 
             // Check for new day
             if (CURRENT_DAY_OF_MONTH != date.getDate()) {
@@ -422,46 +419,42 @@ chore ceremony,sa,12:00 PM,`;
                 CURRENT_MONTH_NUM = date.getMonth();
 
                 console.log("New day! Month " + CURRENT_MONTH_NUM.toString() + " day " + CURRENT_DAY_OF_MONTH.toString() + " specials " + SPECIALS.toString());
+                // Can't do window.reload on Chromecast
                 loadDoc();
                 return;
             }
 
-            // Display the result in the element with id="demo"
+            monthName = MONTHS_LIST[CURRENT_MONTH_NUM];
 
             var timeStr = date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
-
             var sortableDate = dayIdx.toString() + getSortableTimeString(timeStr)
 
-            document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:") + " " + date.getSeconds();
-
+            document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:");
             document.getElementById("day").innerHTML = CURRENT_DAY_NAME;
             document.getElementById("date").innerHTML = monthName + " " + CURRENT_DAY_OF_MONTH;
 
-            if (seconds % 60 == 0 || (CURRENT_EVENT == null && EVENTS.length > 0)) {
-                playChime(false);
-                console.log("current sortable time " + sortableDate);
-                for (var i = 0; i < EVENTS.length; i++) {
-                    eventDate = EVENTS[i].split(",")[0];
+            console.log("current sortable time " + sortableDate + " events " + EVENTS.length.toString());
+            for (var i = 0; i < EVENTS.length; i++) {
+                eventDate = EVENTS[i].split(",")[0];
 
-                    if (i == EVENTS.length - 1) {
-                        setCurrentEvent(EVENTS[i], EVENTS[(i + 1) % EVENTS.length]);
-                        break;
-                    } else {
-                        nextEventDate = EVENTS[i + 1].split(",")[0];
-                        if (sortableDate >= eventDate && sortableDate < nextEventDate) {
-                            var nextIdx = i + 1;
-                            if (nextIdx >= EVENTS.length) {
-                                nextIdx = 0;
-                            }
-
-                            setCurrentEvent(EVENTS[i], EVENTS[nextIdx]);
-                            break;
+                if (i == EVENTS.length - 1) {
+                    setCurrentEvent(EVENTS[i], EVENTS[(i + 1) % EVENTS.length]);
+                    break;
+                } else {
+                    nextEventDate = EVENTS[i + 1].split(",")[0];
+                    if (sortableDate >= eventDate && sortableDate < nextEventDate) {
+                        var nextIdx = i + 1;
+                        if (nextIdx >= EVENTS.length) {
+                            nextIdx = 0;
                         }
-                    }
 
+                        setCurrentEvent(EVENTS[i], EVENTS[nextIdx]);
+                        break;
+                    }
                 }
+
             }
-        }, 1000);
+        }
 
     </script>
 </body>
