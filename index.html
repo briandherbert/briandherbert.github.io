@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time-Triggered Routines</title>
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
     <style>
         /* Global Styles */
         :root {
@@ -303,7 +302,7 @@
     <div id="notifications"></div>
 
     <!-- Google Cast API -->
-    <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
     <script>
         /**
@@ -347,17 +346,118 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
         let isSoundEnabled = false;
 
         // Chromecast variables
-        const applicationID = '5CB45E5A';
+        const applicationID = 'CC1AD845'; // Default media receiver app ID
         const namespace = 'urn:x-cast:com.url.cast';
         let session = null;
         let receiverDead = false;
+
+        // Initialize Cast API when the framework is loaded
+        window['__onGCastApiAvailable'] = function(isAvailable) {
+            if (isAvailable) {
+                initializeCastApi();
+            }
+        };
+
+        // Initialize the Cast API
+        function initializeCastApi() {
+            const sessionRequest = new chrome.cast.SessionRequest(applicationID);
+            
+            const apiConfig = new chrome.cast.ApiConfig(
+                sessionRequest,
+                sessionListener,
+                receiverListener
+            );
+            
+            chrome.cast.initialize(
+                apiConfig,
+                onCastSuccess.bind(this, 'Cast API initialized'),
+                onCastError
+            );
+        }
+
+        // Handle cast errors
+        function onCastError(err) {
+            console.error('Cast Error:', err);
+            showError(err);
+        }
+
+        // Handle cast success
+        function onCastSuccess(msg) {
+            console.log('Cast Success:', msg);
+        }
+
+        // Handle new cast session
+        function sessionListener(newSession) {
+            console.log('New cast session ID:', newSession.sessionId);
+            session = newSession;
+            session.addUpdateListener(sessionUpdateListener);
+            session.addMessageListener(namespace, receiveMessage);
+            
+            // Send URL to cast device after a delay
+            setTimeout(function() {
+                sendMessage({ type: 'loc', url: CAST_URL });
+            }, 6000);
+        }
+
+        // Handle receiver availability
+        function receiverListener(availability) {
+            if (availability === 'available') {
+                console.log('Chromecast receiver found');
+                document.getElementById('castButton').style.display = 'block';
+            } else {
+                console.log('No Chromecast receivers found');
+                document.getElementById('castButton').style.display = 'none';
+            }
+        }
+
+        // Handle session updates
+        function sessionUpdateListener(isAlive) {
+            if (!isAlive) {
+                session = null;
+            }
+            console.log('Cast session is alive:', isAlive);
+        }
+
+        // Handle messages from receiver
+        function receiveMessage(namespace, msg) {
+            console.log('Received message from cast receiver:', msg);
+        }
+
+        // Send message to cast receiver
+        function sendMessage(msg) {
+            if (receiverDead || !session) return;
+            
+            session.sendMessage(
+                namespace,
+                msg,
+                function() {
+                    console.log('Message sent to cast device:', msg);
+                    notify('Message sent: ' + JSON.stringify(msg));
+                },
+                onCastError
+            );
+            
+            if (msg.type === 'loc') {
+                receiverDead = true;
+                notify('Cast receiver will now be unresponsive');
+            }
+        }
 
         // ===== Initialization =====
         window.onload = function() {
             console.log("Application started. URL: " + window.location.href);
             initDate();
             loadData();
-            initCastApi();
+            
+            // Set up cast button click handler
+            document.getElementById('castButton').addEventListener('click', function() {
+                if (chrome.cast && chrome.cast.requestSession) {
+                    chrome.cast.requestSession(sessionListener, onCastError);
+                } else {
+                    console.error('Cast API not initialized');
+                    showError('Cast API not initialized');
+                }
+            });
             
             // Prevent Chromecast timeout
             window._setTimeout = window.setTimeout;
@@ -552,21 +652,22 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
             if (timeParts.length !== 2) return "";
             
             const [timeValue, ampm] = timeParts;
+            const [hours, minutes] = timeValue.split(":");
             
-            // Format: AMPMhh:mm
-            let sortableTime = ampm;
+            // Convert to 24-hour format for proper sorting
+            let hour = parseInt(hours, 10);
             
-            // Add leading zero for proper sorting if needed
-            if (timeValue.length < 5) {
-                sortableTime += "0";
+            // Adjust hour based on AM/PM
+            if (ampm.toUpperCase() === "PM" && hour < 12) {
+                hour += 12;
+            } else if (ampm.toUpperCase() === "AM" && hour === 12) {
+                hour = 0;
             }
             
-            sortableTime += timeValue;
+            // Format as 24-hour time: HH:MM
+            const sortableTime = `${hour.toString().padStart(2, '0')}:${minutes}`;
             
-            // Normalize 00: to display as 12: for AM/PM format
-            sortableTime = sortableTime.replace("00:", "12:");
-            
-            return sortableTime;
+            return ampm.toUpperCase() + sortableTime;
         }
 
         // Get day indices from day string
@@ -730,7 +831,8 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
             // Update date/time display
             const monthName = MONTHS_LIST[currentMonthNum];
             const timeStr = date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
-            const sortableDate = `${dayIdx}${getSortableTimeString(timeStr)}`;
+            const sortableTime = getSortableTimeString(timeStr);
+            const sortableDate = `${dayIdx}${sortableTime}`;
             
             document.getElementById("time").textContent = timeStr.replace("M00:", "M12:");
             document.getElementById("day").textContent = currentDayName;
@@ -744,137 +846,64 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
                 return;
             }
             
+            // Filter events for today's day index first
+            const todayEvents = events.filter(event => event.startsWith(dayIdx.toString()));
+            
+            if (todayEvents.length === 0) {
+                // If no events specifically for today, look for "all" day events
+                const allDayEvents = events.filter(event => event.startsWith(dayIdx.toString()));
+                
+                if (allDayEvents.length > 0) {
+                    // Find the most appropriate "all" day event
+                    handleEvents(allDayEvents, sortableDate);
+                } else {
+                    setDisplayRoutineName("No events for today");
+                }
+                return;
+            }
+            
+            // Process today's events
+            handleEvents(todayEvents, sortableDate);
+        }
+        
+        // Helper function to find the current event from a list of events
+        function handleEvents(eventsList, sortableDate) {
+            // Sort events by time
+            eventsList.sort((a, b) => {
+                const aTime = a.split(",")[0];
+                const bTime = b.split(",")[0];
+                return aTime.localeCompare(bTime);
+            });
+            
             // Find the current event based on time
-            for (let i = 0; i < events.length; i++) {
-                const eventDate = events[i].split(",")[0];
+            for (let i = 0; i < eventsList.length; i++) {
+                const eventDate = eventsList[i].split(",")[0];
                 
                 // If this is the last event, it's current
-                if (i === events.length - 1) {
+                if (i === eventsList.length - 1) {
                     // If we're at the last event, the next event is the first one
-                    const nextEvent = events[0]; // Wrap to first event
+                    const nextEvent = eventsList[0]; // Wrap to first event
                     
                     // Make sure the next event is valid
                     if (nextEvent && nextEvent.split(",").length >= 2) {
                         console.log("Last event in list, next event is:", nextEvent);
-                        setCurrentEvent(events[i], nextEvent);
+                        setCurrentEvent(eventsList[i], nextEvent);
                     } else {
                         console.error("Invalid next event when wrapping:", nextEvent);
-                        setCurrentEvent(events[i], null);
+                        setCurrentEvent(eventsList[i], null);
                     }
                     break;
                 } else {
-                    const nextEventDate = events[i + 1].split(",")[0];
-                    const nextEvent = events[i + 1];
+                    const nextEventDate = eventsList[i + 1].split(",")[0];
+                    const nextEvent = eventsList[i + 1];
                     
                     // If current time is between this event and next event
                     if (sortableDate >= eventDate && sortableDate < nextEventDate) {
                         console.log("Current event found, next event is:", nextEvent);
-                        setCurrentEvent(events[i], nextEvent);
+                        setCurrentEvent(eventsList[i], nextEvent);
                         break;
                     }
                 }
-            }
-        }
-
-        // ===== Chromecast Integration =====
-        
-        // Initialize Cast API
-        function initCastApi() {
-            // Set up cast button click handler
-            document.getElementById('castButton').addEventListener('click', function() {
-                chrome.cast.requestSession(sessionListener, onCastError);
-            });
-            
-            // Initialize when API is available
-            window.__onGCastApiAvailable = function(loaded) {
-                if (loaded) {
-                    initializeCastApi();
-                }
-            };
-        }
-
-        // Initialize the Cast API
-        function initializeCastApi() {
-            const sessionRequest = new chrome.cast.SessionRequest(applicationID);
-            
-            const apiConfig = new chrome.cast.ApiConfig(
-                sessionRequest,
-                sessionListener,
-                receiverListener
-            );
-            
-            chrome.cast.initialize(
-                apiConfig,
-                onCastSuccess.bind(this, 'Cast API initialized'),
-                onCastError
-            );
-        }
-
-        // Handle cast errors
-        function onCastError(err) {
-            console.error('Cast Error:', err);
-            showError(err);
-        }
-
-        // Handle cast success
-        function onCastSuccess(msg) {
-            console.log('Cast Success:', msg);
-        }
-
-        // Handle new cast session
-        function sessionListener(newSession) {
-            console.log('New cast session ID:', newSession.sessionId);
-            session = newSession;
-            session.addUpdateListener(sessionUpdateListener);
-            session.addMessageListener(namespace, receiveMessage);
-            
-            // Send URL to cast device after a delay
-            setTimeout(function() {
-                sendMessage({ type: 'loc', url: CAST_URL });
-            }, 6000);
-        }
-
-        // Handle receiver availability
-        function receiverListener(availability) {
-            if (availability === 'available') {
-                console.log('Chromecast receiver found');
-                document.getElementById('castButton').style.display = 'block';
-            } else {
-                console.log('No Chromecast receivers found');
-                document.getElementById('castButton').style.display = 'none';
-            }
-        }
-
-        // Handle session updates
-        function sessionUpdateListener(isAlive) {
-            if (!isAlive) {
-                session = null;
-            }
-            console.log('Cast session is alive:', isAlive);
-        }
-
-        // Handle messages from receiver
-        function receiveMessage(namespace, msg) {
-            console.log('Received message from cast receiver:', msg);
-        }
-
-        // Send message to cast receiver
-        function sendMessage(msg) {
-            if (receiverDead || !session) return;
-            
-            session.sendMessage(
-                namespace,
-                msg,
-                function() {
-                    console.log('Message sent to cast device:', msg);
-                    notify('Message sent: ' + JSON.stringify(msg));
-                },
-                onCastError
-            );
-            
-            if (msg.type === 'loc') {
-                receiverDead = true;
-                notify('Cast receiver will now be unresponsive');
             }
         }
 
