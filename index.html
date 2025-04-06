@@ -1,462 +1,915 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time-Triggered Routines</title>
     <style>
-        body {
-            background-color: black;
-            color: white;
-            margin: 0%;
+        /* Global Styles */
+        :root {
+            --bg-color: #000;
+            --sidebar-color: #353535;
+            --text-color: #fff;
+            --font-family: Arial, Helvetica, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
             width: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            overflow: hidden;
+        }
+
+        /* Layout Styles */
+        .row {
+            display: flex;
+            height: 100vh;
+        }
+
+        .column {
             height: 100%;
         }
 
-        div.date {
-            font-family: Arial, Helvetica, sans-serif;
+        .left {
+            width: 25%;
+            background-color: var(--sidebar-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .right {
+            width: 75%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topheight {
+            height: 50px;
+        }
+
+        /* Text Styles */
+        .date {
             font-size: 30px;
             font-weight: bold;
         }
 
-        div.time {
-            font-family: Arial, Helvetica, sans-serif;
+        .time {
             font-size: 40px;
             font-weight: bold;
         }
 
         .nextRoutineInfo {
-            font-family: Arial, Helvetica, sans-serif;
             font-size: 24px;
             font-weight: bold;
         }
 
+        /* Content Styles */
         #routine {
-            width: 80%;
-            text-align: center;
-            margin: auto;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding: 20px;
         }
 
         #routineName {
-            font-family: Arial, Helvetica, sans-serif;
             font-size: 40px;
             font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            width: 100%;
         }
 
-        .topheight {
-            height: 50;
+        /* Sidebar Content */
+        .date-container {
+            padding-left: 50px;
+            margin-bottom: 30px;
         }
 
-        .column {
-            float: left;
+        .next-container {
+            padding-left: 50px;
+            margin-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .next-label {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* Special Frame Container */
+        .special-frame-container {
+            width: 100%;
+            height: 40%;
+            max-height: 250px;
+            margin: 10px 0;
+            padding: 0 10px;
+            position: relative;
+        }
+
+        /* Content Frame Container */
+        .content-frame-container {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Iframe Styles */
+        iframe {
+            border: 0;
+            overflow: hidden;
+            background-color: transparent;
+        }
+
+        #specialFrame {
+            width: 100%;
             height: 100%;
-            /*display: inline-block;*/
-
-            /* Should be removed. Only for demonstration */
+            border-radius: 8px;
         }
 
-        .left {
-            /* text-indent: 50px; */
-            width: 25%;
-            background-color: rgb(53, 53, 53);
+        #contentFrame {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
         }
 
-        .right {
-            width: 75%;
-
+        /* Cast Button Styles */
+        .cast-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
         }
 
-        .sidebarColor {
-            background-color: rgb(53, 53, 53);
+        #castButton {
+            border: 0;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px 12px;
+            background: #333;
+            color: #AAA;
+            cursor: pointer;
+        }
+
+        #castButton:hover {
+            background: #444;
+        }
+
+        #castButton:active {
+            outline: none;
+            border-color: #8ecaed;
+            box-shadow: 0 0 5px #8ecaed;
+        }
+
+        /* Sound Button */
+        #enableSound {
+            margin-left: 50px;
+            margin-bottom: 20px;
+        }
+
+        #soundButton {
+            background-color: #333;
+            color: #AAA;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        /* Notifications */
+        #notifications {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .notification {
+            background: #222;
+            color: #FFF;
+            padding: 13px 20px;
+            margin: 10px;
+            border-radius: 2px;
+        }
+
+        .error {
+            background: #e64a4a;
+            color: #FFF;
+            padding: 13px 20px;
+            margin: 10px;
+            border-radius: 2px;
+        }
+
+        /* Google Slides UI Handling */
+        /* This approach uses CSS to hide UI elements from Google Slides */
+        #contentFrame {
+            /* These parameters help hide the Google Slides UI elements */
+            margin: 0;
+            padding: 0;
+            max-width: 100%;
+        }
+        
+        /* Footer overlay for Google Slides */
+        .footer-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 36px;
+            background-color: var(--bg-color);
+            z-index: 10;
+        }
+        
+        .special-footer-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 36px;
+            background-color: var(--sidebar-color);
+            z-index: 10;
         }
     </style>
 </head>
-
 <body>
-
     <div class="row">
+        <!-- Left Column (Sidebar) -->
         <div class="column left">
-            <div class="topheight"></div>
-
-            <div style="text-indent: 50px;">
+            <!-- Date and Time Display -->
+            <div class="date-container">
                 <div id="day" class="date">_</div>
                 <div id="date" class="date">_</div>
                 <div id="time" class="time">_</div>
             </div>
 
-            <br>
+            <!-- Sound Enable Button -->
             <div id="enableSound">
-                <button onclick='playChime(true)' ; hidden=true; style="background-color: black; color: gray;">Enable
-                    sound</button>
+                <button id="soundButton" onclick="playChime(true)">Enable sound</button>
             </div>
 
-
-            <div style="width: 100%; height: 50%; position: relative; overflow: hidden; border: rgb(53, 53, 53); ">
-                <div class="sidebarColor" style="position: absolute; top: 0; width: 100%; height: 55px;">
-                </div>
-                <iframe id="specialFrame" src="about:blank" allowtransparency="true"
-                    style=" border:0px solid black; height: 100%; width: 100%; overflow: hidden; left: 0;"></iframe>
-                <div class="sidebarColor" style="position: relative; bottom: 90; width: 100%; height: 90px;">
-                </div>
+            <!-- Special Frame for Sidebar Content -->
+            <div class="special-frame-container">
+                <iframe id="specialFrame" src="about:blank" allowtransparency="true"></iframe>
+                <div class="special-footer-overlay"></div>
             </div>
-            <br><br>
 
-            <div style="padding-left: 50px;">
-                <div class="nextRoutineInfo" style="font-size: 20px;">Next:</div>
+            <!-- Next Routine Information -->
+            <div class="next-container">
+                <div class="nextRoutineInfo next-label">Next:</div>
                 <div id="nextRoutineDate" class="nextRoutineInfo">_</div>
                 <div id="nextRoutineName" class="nextRoutineInfo">_</div>
             </div>
-
         </div>
-        <div class="column right" style="background-color:black">
+
+        <!-- Right Column (Main Content) -->
+        <div class="column right">
             <div id="routine">
+                <!-- Cast Button -->
+                <div class="cast-container">
+                    <button id="castButton">Cast</button>
+                </div>
 
-                <iframe src="sender.html" height="35" width="54"
-                    style="border:0px; float: right; padding: 10;"></iframe>
-
-                <div class="topheight"></div>
                 <div id="routineName">Loading</div>
-                <br>
-                <div style="width: 100%; height: 80%;">
-                    <iframe id="contentFrame"
-                        style="border:0px solid black; height: 100%; width: 99%; overflow: hidden; position: relative;"></iframe>
-                    <div style="position: relative; bottom: 36; background-color: black; width: 100%; height: 36px;">
-                    </div>
+
+                <!-- Main Content Frame -->
+                <div class="content-frame-container">
+                    <iframe id="contentFrame" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+                    <div class="footer-overlay"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Notifications Container -->
+    <div id="notifications"></div>
+
+    <!-- Google Cast API -->
+    <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+
     <script>
-        // Using git pages https://briandherbert.github.io/
-        // https://demille.github.io/url-cast-receiver/
-        // ^^ manages to cast all
+        /**
+         * Time-Triggered Routines Application
+         * 
+         * This application displays time-based routines fetched from a Google Spreadsheet.
+         * It determines the current applicable routine based on day and time,
+         * and displays the content in an iframe.
+         */
 
-        // you can embed specific slide with url param:
-        // https://docs.google.com/presentation/d/e/2PACX-1vRXFNB3B-jYa_Mk7GVONkm0Smkfe7RuEsgZQpe22EBE7uWWhMx-rMW32jqsyQNvC4qzWnIsTQyV014S/embed?start=false&loop=false&slide=id.gd0c3bf7b93_0_0
-        // Bypass CORS w local server: python3 -m http.server 8000
-        // http://localhost:8000/
+        // ===== Constants =====
+        const DAYS_LIST = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const WEEKDAYS = DAYS_LIST.slice(1, 6);
+        const WEEKEND = ["Sunday", "Saturday"];
+        const MONTHS_LIST = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        
+        const CSV_IDX_NAME = 0;
+        const CSV_IDX_DAYS = 1;
+        const CSV_IDX_TIME = 2;
+        const CSV_IDX_URL = 3;
+        
+        // Google Sheet URL - using the published CSV output format
+        const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv";
+        const DOORBELL_SOUND_URL = "https://creative-tech-misc.s3.amazonaws.com/routiner/doorbell.mp3";
+        const CAST_URL = window.location.href;
 
-        window.onload = function () {
-            console.log("url data " + window.location.href);
+        // Fallback data in case the Google Sheet fails to load
+        const FALLBACK_DATA = `Name,Days,Time,Url
+School morning,week,8:00 AM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
+Bedtime,week,7:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
+Church,su,8:30 AM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
+Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p`;
+        
+        // ===== State Variables =====
+        let events = [];
+        let specials = [];
+        let currentEvent = null;
+        let currentDayName = "";
+        let currentDayOfMonth = 0;
+        let currentMonthNum = 0;
+        let isSoundEnabled = false;
+
+        // Chromecast variables
+        const applicationID = '5CB45E5A';
+        const namespace = 'urn:x-cast:com.url.cast';
+        let session = null;
+        let receiverDead = false;
+
+        // ===== Initialization =====
+        window.onload = function() {
+            console.log("Application started. URL: " + window.location.href);
             initDate();
-            loadDoc();
+            loadData();
+            initCastApi();
+            
+            // Prevent Chromecast timeout
+            window._setTimeout = window.setTimeout;
+            window.setTimeout = function(a, b) {
+                // Disable setTimeout so Chromecast won't kill us after 5 minutes
+            };
         };
 
-        window._setTimeout = window.setTimeout;
-        window.setTimeout = function (a, b) {
-            // disable setTimeout so chromecast won't kill us after 5 minutes...
-        };
-
-        var responseText = `Name,Days,Time,Url
-School morn,week,8:00 AM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
-Bedtime,week,7:00 PM,
-church,su,8:30 AM,
-chore ceremony,sa,12:00 PM,`;
-
-        var DASH_URL = "https://creative-tech-misc.s3.amazonaws.com/routiner/dash.html"
-
-        var DAYS_LIST = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        var WEEKDAYS = DAYS_LIST.slice(1, 6);
-        var WEEKEND = ["Sunday", "Saturday"];
-        var MONTHS_LIST = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-        var CSV_IDX_NAME = 0;
-        var CSV_IDX_DAYS = 1;
-        var CSV_IDX_TIME = 2;
-        var CSV_IDX_URL = 3;
-
-        var EVENTS = [];
-        var SPECIALS = [];
-
-        var CURRENT_EVENT;
-        var CURRENT_DAY_NAME;
-
-        var CURRENT_DAY_OF_MONTH = 0;
-        var CURRENT_MONTH_NUM = 0;
-
-        var isSoundEnabled = false;
-
-        var PROCESS;
-
-
+        // Initialize date variables
         function initDate() {
-            date = new Date();
-            CURRENT_DAY_OF_MONTH = date.getDate();
-            CURRENT_MONTH_NUM = date.getMonth();
+            const date = new Date();
+            currentDayOfMonth = date.getDate();
+            currentMonthNum = date.getMonth();
         }
 
-
-        // Load the data
-        function loadDoc() {
-            console.log("Loading doc");
-
-            // Reset globals
-            CURRENT_EVENT = null;
-
-            // Fetch data
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    setDisplayRoutineName("processing...")
-                    processData(this.responseText);
-                    console.log("set interval to minute");
+        // ===== Data Loading =====
+        
+        // Load data from Google Spreadsheet
+        function loadData() {
+            console.log("Loading data from spreadsheet");
+            
+            // Reset state
+            currentEvent = null;
+            
+            // Add cache busting parameter to prevent caching
+            const dataUrl = `${SPREADSHEET_URL}&cacheBust=${Math.random().toString()}`;
+            console.log("Fetching data from URL:", dataUrl);
+            
+            // Fetch data from spreadsheet
+            fetch(dataUrl)
+                .then(response => {
+                    console.log("Response status:", response.status);
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log("Data received, length:", data.length);
+                    if (!data || data.trim() === "") {
+                        console.warn("Empty data received from Google Sheet, using fallback data");
+                        data = FALLBACK_DATA;
+                    }
+                    
+                    setDisplayRoutineName("Processing...");
+                    processData(data);
+                    console.log("Setting update interval to one minute");
                     update();
                     setInterval(update, 60000);
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                    showError({ message: "Failed to load data from Google Sheet. Using fallback data." });
+                    
+                    // Use fallback data if the fetch fails
+                    console.log("Using fallback data due to error");
+                    processData(FALLBACK_DATA);
+                    update();
+                    setInterval(update, 60000);
+                });
+        }
+
+        // Process CSV data from spreadsheet
+        function processData(csvText) {
+            console.log("Processing data");
+            console.log("Raw CSV data:", csvText);
+            
+            // Reset arrays
+            events = [];
+            specials = [];
+            
+            // Parse CSV
+            const allTextLines = csvText.split(/\r\n|\n/);
+            console.log("CSV lines:", allTextLines);
+            
+            const headers = allTextLines[0].split(',');
+            console.log("CSV headers:", headers);
+            
+            const lines = [];
+            
+            // Process each line of CSV
+            for (let i = 1; i < allTextLines.length; i++) {
+                const data = allTextLines[i].split(',');
+                console.log(`Line ${i} data:`, data);
+                
+                // Skip empty lines
+                if (data.length === 1 && data[0] === "") {
+                    console.log(`Skipping empty line ${i}`);
+                    continue;
                 }
-            };
-
-            var dataUrl = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv&cacheBust=" + Math.random().toString()
-            xhttp.open("GET", dataUrl, true);
-            xhttp.crossDomain = true;
-            xhttp.send();
-        }
-
-        function setDisplayRoutineName(name) {
-            console.log("Set display routine name " + name)
-            document.getElementById("routineName").innerHTML = name;
-        }
-
-        function processData(allText) {
-            console.log("processData");
-
-            EVENTS = []
-            SPECIALS = []
-
-            var allTextLines = allText.split(/\r\n|\n/);
-            var headers = allTextLines[0].split(',');
-            var lines = [];
-
-            for (var i = 1; i < allTextLines.length; i++) {
-                var data = allTextLines[i].split(',');
-                if (data.length == headers.length) {
-
-                    var tarr = [];
-                    for (var j = 0; j < headers.length; j++) {
-                        tarr.push(data[j]);
+                
+                if (data.length === headers.length) {
+                    const row = [];
+                    for (let j = 0; j < headers.length; j++) {
+                        row.push(data[j]);
                     }
-                    lines.push(tarr);
+                    lines.push(row);
+                } else {
+                    console.warn(`Line ${i} has incorrect number of fields:`, data);
                 }
             }
-            console.log(lines);
-
-            // Multiply out routines per day, formatting them in string-sortable format
-            lines.forEach(
-                line => {
-
-                    var daysStr = String(line[CSV_IDX_DAYS]).toLowerCase();
-
-                    if (daysStr == "sidebar") {
-                        // TODO
-                        console.log("Found sidebar url");
-                        document.getElementById("specialFrame").src = line[CSV_IDX_URL];
-                        return;
-                    }
-
-
-                    parseDayStrForSpecial(daysStr, line[CSV_IDX_URL]);
-
-                    dayIndices = getDayIndices(daysStr);
-                    dayIndices.forEach(idx => {
-                        var timeStr = line[CSV_IDX_TIME];
-                        var time = getSortableTimeString(timeStr)
-
-                        EVENTS.push(idx.toString() + time + "," + line[CSV_IDX_NAME] + "," + line[CSV_IDX_URL]);
-                    });
-
-                    dayOfWeekIdx = 0;
+            
+            console.log("Processed lines:", lines);
+            
+            // Process each routine
+            lines.forEach((line, index) => {
+                console.log(`Processing routine ${index}:`, line);
+                
+                const daysStr = String(line[CSV_IDX_DAYS]).toLowerCase();
+                const name = line[CSV_IDX_NAME];
+                const timeStr = line[CSV_IDX_TIME];
+                const url = line[CSV_IDX_URL];
+                
+                // Skip if any required field is empty
+                if (!daysStr || !name || !timeStr || !url) {
+                    console.log(`Skipping routine ${index} due to missing required fields`);
+                    return;
                 }
-            )
-
-            // Sort by string
-            EVENTS.sort();
-            EVENTS.forEach(event => { console.log("Event " + event) })
-            checkForSpecialDay();
+                
+                console.log(`Routine ${index} - Name: ${name}, Days: ${daysStr}, Time: ${timeStr}, URL: ${url}`);
+                
+                // Handle sidebar content
+                if (daysStr === "sidebar") {
+                    console.log("Found sidebar URL");
+                    document.getElementById("specialFrame").src = url;
+                    return;
+                }
+                
+                // Check for special days (mm/dd format)
+                checkForSpecialDay(daysStr, url);
+                
+                // Process regular routines
+                const dayIndices = getDayIndices(daysStr);
+                console.log(`Day indices for ${daysStr}:`, dayIndices);
+                
+                dayIndices.forEach(idx => {
+                    const time = getSortableTimeString(timeStr);
+                    
+                    // Format: dayIndex + sortableTime + name + url
+                    const eventStr = `${idx}${time},${name},${url}`;
+                    console.log(`Adding event: ${eventStr}`);
+                    events.push(eventStr);
+                });
+            });
+            
+            // Sort events by day and time
+            events.sort();
+            
+            // Debug log all events
+            console.log("=== ALL SORTED EVENTS ===");
+            events.forEach((event, index) => console.log(`Event ${index}: ${event}`));
+            console.log("=========================");
+            
+            // Check if today is a special day
+            checkSpecialDayToday();
         }
 
-        function checkForSpecialDay() {
-            console.log("checking for special days");
-            SPECIALS.forEach(specialStr => {
-                parts = specialStr.split(",");
-                specialDateParts = parts[0].split("/");
-                specialMonthNum = parseInt(specialDateParts[0]);
-                specialDayNum = parseInt(specialDateParts[1]);
+        // Check if a day string is a special day (mm/dd format)
+        function checkForSpecialDay(daysStr, url) {
+            if (daysStr.match(/\d+\/\d+/)) {
+                console.log("Found special day: " + daysStr);
+                specials.push(`${daysStr},${url}`);
+            }
+        }
 
-                if (CURRENT_MONTH_NUM + 1 == specialMonthNum && CURRENT_DAY_OF_MONTH == specialDayNum) {
-                    console.log("Today is a special!");
+        // Check if today is a special day and update sidebar if needed
+        function checkSpecialDayToday() {
+            console.log("Checking for special days");
+            
+            specials.forEach(specialStr => {
+                const parts = specialStr.split(",");
+                const specialDateParts = parts[0].split("/");
+                const specialMonthNum = parseInt(specialDateParts[0]);
+                const specialDayNum = parseInt(specialDateParts[1]);
+                
+                // Month is 0-based in JS but 1-based in special day format
+                if (currentMonthNum + 1 === specialMonthNum && currentDayOfMonth === specialDayNum) {
+                    console.log("Today is a special day!");
                     document.getElementById("specialFrame").src = parts[1];
                 }
-            }
-            );
+            });
         }
 
-        function parseDayStrForSpecial(daysStr, url) {
-            if (daysStr.match(/\d+\/\d+/)) {
-                console.log("found specials " + daysStr);
-
-                SPECIALS.push(daysStr + "," + url);
-            }
-        }
-
+        // ===== Helper Functions =====
+        
+        // Convert time string to sortable format (for comparing times)
         function getSortableTimeString(timeStr) {
-            // Split off AM / PM
-            timeParts = timeStr.split(" ")
-            var time = timeParts[1]
-
-            // Split hour min
-            hourMin = timeParts[0].split(":");
-            hour = hourMin[0]
-
-            // double digits
-            if (timeParts[0].length < 5) {
-                time += "0";
+            if (!timeStr) return "";
+            
+            // Split time into parts (e.g., "8:00 AM" -> ["8:00", "AM"])
+            const timeParts = timeStr.split(" ");
+            if (timeParts.length !== 2) return "";
+            
+            const [timeValue, ampm] = timeParts;
+            
+            // Format: AMPMhh:mm
+            let sortableTime = ampm;
+            
+            // Add leading zero for proper sorting if needed
+            if (timeValue.length < 5) {
+                sortableTime += "0";
             }
-
-            time += timeParts[0];
-
-            time = time.replace("M12:", "M00:")
-
-            return time;
+            
+            sortableTime += timeValue;
+            
+            // Normalize 00: to display as 12: for AM/PM format
+            sortableTime = sortableTime.replace("00:", "12:");
+            
+            return sortableTime;
         }
 
+        // Get day indices from day string
         function getDayIndices(daysStr) {
-            var days = [];
-            var dayIndices = []
-
-            if (daysStr == "all") {
-                days = DAYS_LIST;
-            } else if (daysStr == "week") {
-                days = WEEKDAYS;
-            } else if (daysStr == "wkend") {
-                days = WEEKEND
+            const days = [];
+            const dayIndices = [];
+            
+            // Handle special keywords
+            if (daysStr === "all") {
+                return DAYS_LIST.map((_, index) => index);
+            } else if (daysStr === "week") {
+                return WEEKDAYS.map((_, index) => index + 1);
+            } else if (daysStr === "wkend") {
+                return [0, 6]; // Sunday and Saturday
             } else {
-                days = daysStr.replace(" ", "").split(",");
-            }
-            days.forEach(d => {
-                for (var i = 0; i < DAYS_LIST.length; i++) {
-                    if (DAYS_LIST[i].toLowerCase().startsWith(d.toLowerCase())) {
-                        dayIndices.push(i);
-                        break;
+                // Handle comma-separated day abbreviations
+                const dayAbbrs = daysStr.replace(/\s+/g, "").split(",");
+                
+                dayAbbrs.forEach(abbr => {
+                    for (let i = 0; i < DAYS_LIST.length; i++) {
+                        if (DAYS_LIST[i].toLowerCase().startsWith(abbr.toLowerCase())) {
+                            dayIndices.push(i);
+                            break;
+                        }
                     }
-                }
+                });
             }
-            );
-
-            console.log("Day str " + daysStr + " yielded indices " + dayIndices.toString());
+            
+            console.log(`Day string "${daysStr}" yielded indices: ${dayIndices.toString()}`);
             return dayIndices;
         }
 
+        // Set the display name of the current routine
+        function setDisplayRoutineName(name) {
+            console.log("Set display routine name: " + name);
+            document.getElementById("routineName").textContent = name;
+        }
+
+        // ===== Event Handling =====
+        
+        // Set the current event and update display
         function setCurrentEvent(currentStr, nextStr) {
-            console.log("Set event to " + currentStr + " \n current event is " + CURRENT_EVENT);
-
-            if (CURRENT_EVENT != currentStr) {
-                var parts = currentStr.split(",");
-                var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
-                var time = parts[0].slice(3, 5) + " " + parts[0].slice(1, 2);
-                var name = parts[1];
-                var url = parts[2];
-                console.log("url is " + url);
-
-                if (url != null) {
-                    console.log("Set content frame to " + url)
+            console.log("Set event to: " + currentStr);
+            console.log("Current event is: " + currentEvent);
+            
+            // Only update if the event has changed
+            if (currentStr !== currentEvent) {
+                const parts = currentStr.split(",");
+                const dayIndex = parseInt(parts[0].charAt(0));
+                const name = parts[1];
+                const url = parts[2];
+                
+                console.log("URL is: " + url);
+                
+                // Update content frame if URL is provided
+                if (url) {
+                    console.log("Set content frame to: " + url);
                     document.getElementById("contentFrame").src = url;
                 }
-
-                CURRENT_EVENT = currentStr;
-
-                console.log("Set routine name to " + name)
+                
+                // Update state and display
+                currentEvent = currentStr;
                 setDisplayRoutineName(name);
-
-                setNextEvent(nextStr);
+                
+                // Play sound notification for event change
+                playChime(false);
+                
+                // Update next event display
+                if (nextStr) {
+                    setNextEvent(nextStr);
+                } else {
+                    document.getElementById("nextRoutineDate").textContent = "No upcoming events";
+                    document.getElementById("nextRoutineName").textContent = "";
+                }
             }
-
-            console.log("current event " + CURRENT_EVENT.toString());
         }
 
+        // Set the next event display
         function setNextEvent(nextStr) {
-            console.log("Set next event to " + nextStr)
-            var parts = nextStr.split(",");
-            var day = DAYS_LIST[parseInt(parts[0].slice(0.1))];
-
-            var time = parts[0].slice(3, 8).replace("00:", "12:") + " " + parts[0].slice(1, 3);
-            var name = parts[1];
-            var url = parts[2];
-
-            var date = time;
-
-            if (day != CURRENT_DAY_NAME) {
-                date = day + ", " + time;
+            console.log("Set next event to: " + nextStr);
+            
+            if (!nextStr || nextStr.split(",").length < 2) {
+                console.error("Invalid next event string:", nextStr);
+                document.getElementById("nextRoutineDate").textContent = "No upcoming events";
+                document.getElementById("nextRoutineName").textContent = "";
+                return;
             }
-
-            document.getElementById("nextRoutineDate").innerHTML = date;
-            document.getElementById("nextRoutineName").innerHTML = name;
+            
+            const parts = nextStr.split(",");
+            const dayIndex = parseInt(parts[0].charAt(0));
+            const day = DAYS_LIST[dayIndex];
+            
+            // Extract and format time from the sortable string
+            // Format: AMPMhh:mm
+            const ampm = parts[0].substring(1, 3);
+            let time = parts[0].substring(3, 8);
+            
+            // Fix 00: to display as 12: for AM/PM format
+            time = time.replace("00:", "12:");
+            
+            const formattedTime = `${time} ${ampm}`;
+            const name = parts[1];
+            
+            // Show day name if different from current day
+            let dateDisplay = formattedTime;
+            if (day !== currentDayName) {
+                dateDisplay = `${day}, ${formattedTime}`;
+            }
+            
+            // Update display with more detailed logging
+            console.log(`Setting next routine date: "${dateDisplay}"`);
+            console.log(`Setting next routine name: "${name}"`);
+            
+            document.getElementById("nextRoutineDate").textContent = dateDisplay;
+            document.getElementById("nextRoutineName").textContent = name;
         }
 
+        // Play sound notification
         function playChime(fromUser) {
             if (fromUser) {
                 isSoundEnabled = true;
                 document.getElementById("enableSound").style.display = "none";
             }
-
+            
             if (isSoundEnabled) {
-                playSound("https://creative-tech-misc.s3.amazonaws.com/routiner/doorbell.mp3");
+                playSound(DOORBELL_SOUND_URL);
             }
         }
 
+        // Play a sound from URL
         function playSound(url) {
-            var a = new Audio(url);
-            a.play();
+            const audio = new Audio(url);
+            audio.play().catch(error => {
+                console.error("Error playing sound:", error);
+            });
         }
 
+        // ===== Update Function =====
+        
+        // Update display and current event based on current time
         function update() {
-            console.log("Do update");
-            // Get today's date and time
-            var date = new Date();
-            var dayIdx = date.getDay();
-            CURRENT_DAY_NAME = DAYS_LIST[dayIdx];
-
-            // Check for new day
-            if (CURRENT_DAY_OF_MONTH != date.getDate()) {
-                CURRENT_DAY_OF_MONTH = date.getDate();
-                CURRENT_MONTH_NUM = date.getMonth();
-
-                console.log("New day! Month " + CURRENT_MONTH_NUM.toString() + " day " + CURRENT_DAY_OF_MONTH.toString() + " specials " + SPECIALS.toString());
-                // Can't do window.reload on Chromecast
-                loadDoc();
+            console.log("Updating display");
+            
+            // Get current date and time
+            const date = new Date();
+            const dayIdx = date.getDay();
+            currentDayName = DAYS_LIST[dayIdx];
+            
+            // Check if day has changed
+            if (currentDayOfMonth !== date.getDate()) {
+                currentDayOfMonth = date.getDate();
+                currentMonthNum = date.getMonth();
+                
+                console.log(`New day! Month: ${currentMonthNum}, Day: ${currentDayOfMonth}, Specials: ${specials}`);
+                
+                // Reload data for the new day
+                loadData();
                 return;
             }
-
-            monthName = MONTHS_LIST[CURRENT_MONTH_NUM];
-
-            var timeStr = date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
-            var sortableDate = dayIdx.toString() + getSortableTimeString(timeStr)
-
-            document.getElementById("time").innerHTML = timeStr.replace("M00:", "M12:");
-            document.getElementById("day").innerHTML = CURRENT_DAY_NAME;
-            document.getElementById("date").innerHTML = monthName + " " + CURRENT_DAY_OF_MONTH;
-
-            console.log("current sortable time " + sortableDate + " events " + EVENTS.length.toString());
-            for (var i = 0; i < EVENTS.length; i++) {
-                eventDate = EVENTS[i].split(",")[0];
-
-                if (i == EVENTS.length - 1) {
-                    setCurrentEvent(EVENTS[i], EVENTS[(i + 1) % EVENTS.length]);
+            
+            // Update date/time display
+            const monthName = MONTHS_LIST[currentMonthNum];
+            const timeStr = date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
+            const sortableDate = `${dayIdx}${getSortableTimeString(timeStr)}`;
+            
+            document.getElementById("time").textContent = timeStr.replace("M00:", "M12:");
+            document.getElementById("day").textContent = currentDayName;
+            document.getElementById("date").textContent = `${monthName} ${currentDayOfMonth}`;
+            
+            // Find current event based on time
+            console.log(`Current sortable time: ${sortableDate}, Events count: ${events.length}`);
+            
+            if (events.length === 0) {
+                setDisplayRoutineName("No events scheduled");
+                return;
+            }
+            
+            // Find the current event based on time
+            for (let i = 0; i < events.length; i++) {
+                const eventDate = events[i].split(",")[0];
+                
+                // If this is the last event, it's current
+                if (i === events.length - 1) {
+                    // If we're at the last event, the next event is the first one
+                    const nextEvent = events[0]; // Wrap to first event
+                    
+                    // Make sure the next event is valid
+                    if (nextEvent && nextEvent.split(",").length >= 2) {
+                        console.log("Last event in list, next event is:", nextEvent);
+                        setCurrentEvent(events[i], nextEvent);
+                    } else {
+                        console.error("Invalid next event when wrapping:", nextEvent);
+                        setCurrentEvent(events[i], null);
+                    }
                     break;
                 } else {
-                    nextEventDate = EVENTS[i + 1].split(",")[0];
+                    const nextEventDate = events[i + 1].split(",")[0];
+                    const nextEvent = events[i + 1];
+                    
+                    // If current time is between this event and next event
                     if (sortableDate >= eventDate && sortableDate < nextEventDate) {
-                        var nextIdx = i + 1;
-                        if (nextIdx >= EVENTS.length) {
-                            nextIdx = 0;
-                        }
-
-                        setCurrentEvent(EVENTS[i], EVENTS[nextIdx]);
+                        console.log("Current event found, next event is:", nextEvent);
+                        setCurrentEvent(events[i], nextEvent);
                         break;
                     }
                 }
-
             }
         }
 
+        // ===== Chromecast Integration =====
+        
+        // Initialize Cast API
+        function initCastApi() {
+            // Set up cast button click handler
+            document.getElementById('castButton').addEventListener('click', function() {
+                chrome.cast.requestSession(sessionListener, onCastError);
+            });
+            
+            // Initialize when API is available
+            window.__onGCastApiAvailable = function(loaded) {
+                if (loaded) {
+                    initializeCastApi();
+                }
+            };
+        }
+
+        // Initialize the Cast API
+        function initializeCastApi() {
+            const sessionRequest = new chrome.cast.SessionRequest(applicationID);
+            
+            const apiConfig = new chrome.cast.ApiConfig(
+                sessionRequest,
+                sessionListener,
+                receiverListener
+            );
+            
+            chrome.cast.initialize(
+                apiConfig,
+                onCastSuccess.bind(this, 'Cast API initialized'),
+                onCastError
+            );
+        }
+
+        // Handle cast errors
+        function onCastError(err) {
+            console.error('Cast Error:', err);
+            showError(err);
+        }
+
+        // Handle cast success
+        function onCastSuccess(msg) {
+            console.log('Cast Success:', msg);
+        }
+
+        // Handle new cast session
+        function sessionListener(newSession) {
+            console.log('New cast session ID:', newSession.sessionId);
+            session = newSession;
+            session.addUpdateListener(sessionUpdateListener);
+            session.addMessageListener(namespace, receiveMessage);
+            
+            // Send URL to cast device after a delay
+            setTimeout(function() {
+                sendMessage({ type: 'loc', url: CAST_URL });
+            }, 6000);
+        }
+
+        // Handle receiver availability
+        function receiverListener(availability) {
+            if (availability === 'available') {
+                console.log('Chromecast receiver found');
+                document.getElementById('castButton').style.display = 'block';
+            } else {
+                console.log('No Chromecast receivers found');
+                document.getElementById('castButton').style.display = 'none';
+            }
+        }
+
+        // Handle session updates
+        function sessionUpdateListener(isAlive) {
+            if (!isAlive) {
+                session = null;
+            }
+            console.log('Cast session is alive:', isAlive);
+        }
+
+        // Handle messages from receiver
+        function receiveMessage(namespace, msg) {
+            console.log('Received message from cast receiver:', msg);
+        }
+
+        // Send message to cast receiver
+        function sendMessage(msg) {
+            if (receiverDead || !session) return;
+            
+            session.sendMessage(
+                namespace,
+                msg,
+                function() {
+                    console.log('Message sent to cast device:', msg);
+                    notify('Message sent: ' + JSON.stringify(msg));
+                },
+                onCastError
+            );
+            
+            if (msg.type === 'loc') {
+                receiverDead = true;
+                notify('Cast receiver will now be unresponsive');
+            }
+        }
+
+        // ===== Notification Functions =====
+        
+        // Show notification
+        function notify(msg) {
+            const notificationsEl = document.getElementById('notifications');
+            const notice = document.createElement('div');
+            
+            notice.className = 'notification';
+            notice.textContent = msg;
+            
+            notificationsEl.appendChild(notice);
+            
+            // Auto-remove notification after delay
+            setTimeout(function() {
+                notificationsEl.removeChild(notice);
+            }, 8000);
+        }
+
+        // Show error notification
+        function showError(err) {
+            const notificationsEl = document.getElementById('notifications');
+            const notice = document.createElement('div');
+            
+            notice.className = 'error';
+            notice.textContent = 'Error: ' + (err.message || JSON.stringify(err));
+            
+            notificationsEl.appendChild(notice);
+            
+            // Auto-remove error after delay
+            setTimeout(function() {
+                notificationsEl.removeChild(notice);
+            }, 5000);
+        }
     </script>
 </body>
-
 </html>
