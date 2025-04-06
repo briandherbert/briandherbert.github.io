@@ -1,6 +1,12 @@
-# Time-Triggered Routines Web Application
+# Routines Dashboard
 
-A static web application that displays time-based routines fetched from a Google Spreadsheet. The application shows the current routine based on the day and time, displaying the content in an iframe.
+Display your routines on any TV or monitor by casting from any device, then disconnecting. No persistent hardware needed (other than cast receiver on the display), and it's FREE.
+
+You'll make a schedule of webpages to show, like "at 1pm on Fridays, show webpage xyz.com". This schedule will live in a Google Sheet you create; you can copy my example here: https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A
+
+Google Sheets is an ideal way to make webpages, since each slide gets its own page. For my family, I have a "Get ready for school slide" that's set up for 7:30am on weekdays, and a "Start Bedtime" slide that's set up for 8:20pm every day. Here's that slideshow: https://docs.google.com/presentation/d/1hM4JnnS_9ZbxVihTY1vbu_O0jB_0rEp1dLaPti79Hvs/edit#slide=id.gd460e50c57_0_128
+
+Note that I sometimes have work-in-progress images off to the side that won't show up until I move them onto the slide.
 
 ## Overview
 
