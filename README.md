@@ -91,25 +91,35 @@ The application includes Chromecast support to display routines on any TV or mon
 
 - **Application ID**: Uses a specific application ID (`5CB45E5A`) that works with a custom URL Cast Receiver.
 
-- **Cast URL**: The application casts a hardcoded URL (`https://briandherbert.github.io/`) to the Chromecast device.
+- **Cast URL**: The application must cast the URL where the site is hosted (e.g., `https://briandherbert.github.io/`) to the Chromecast device.
 
 - **Communication Protocol**: Uses the `urn:x-cast:com.url.cast` namespace for messaging with the receiver.
 
 ### Important Implementation Details
 
-1. **URL Hardcoding**: The implementation requires the exact URL `https://briandherbert.github.io/` to be cast. Any modifications to this URL may cause the cast to fail.
+1. **URL Matching Strategy**: When reusing this for your own dashboard, you must set the `CAST_URL` variable in `sender.html` to match exactly where your site is hosted. This is critical for the cast receiver to properly load your content.
 
-2. **Session Timing**: There's a 6-second delay between establishing a cast session and sending the URL to give the receiver time to initialize.
+2. **Session Timing**: There's a delay between establishing a cast session and sending the URL to give the receiver time to initialize.
 
 3. **Receiver Communication**: After sending the URL, the sender marks the receiver as "unresponsive" by design, as the receiver will handle all further interaction independently.
 
 4. **Modifications Caution**: When modifying the Chromecast functionality, maintain these specific parameters to ensure compatibility with the custom receiver.
 
+### Reusing for Your Own Dashboard
+
+To adapt this for your own dashboard:
+
+1. Fork or copy this repository
+2. Host it at your own domain (e.g., GitHub Pages)
+3. Set the `CAST_URL` variable in `sender.html` to match your hosting domain exactly
+4. Modify the content to display your own dashboard information
+5. The casting functionality will work as long as you maintain the key components and URL matching
+
 ### Troubleshooting Cast Issues
 
 If casting isn't working:
 
-1. Ensure you're not modifying the hardcoded `CAST_URL` value in `sender.html`
+1. Verify that the `CAST_URL` in `sender.html` exactly matches where your site is hosted
 2. Check that the iframe is properly including `sender.html` in the main page
 3. Verify that your browser has permission to use Cast functionality
 4. Check browser console for any Cast API errors

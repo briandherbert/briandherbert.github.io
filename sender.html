@@ -127,8 +127,13 @@
   <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
   <script type="text/javascript">
 
-    CAST_URL = "https://briandherbert.github.io/"
-
+    // ==================================================
+    // IMPORTANT: Set this URL to match your hosting URL
+    // This must be the exact domain where the site is hosted
+    // Example: "https://briandherbert.github.io/"
+    // ==================================================
+    const CAST_URL = "https://briandherbert.github.io/"
+    
     document.getElementById('url').innerHTML = CAST_URL
 
     // click handlers
@@ -175,12 +180,13 @@
     function sessionListener(newSession) {
       console.log('New session ID:' + newSession.sessionId);
       session = newSession;
+      receiverDead = false; // Reset the receiverDead flag when starting a new session
       session.addUpdateListener(sessionUpdateListener);
       session.addMessageListener(namespace, receiveMessage);
 
       setTimeout(function () {
         sendMessage({ type: 'loc', url: CAST_URL })
-      }, 6000);
+      }, 4000);
     }
 
     function receiverListener(e) {
@@ -192,6 +198,7 @@
     function sessionUpdateListener(isAlive) {
       if (!isAlive) {
         session = null;
+        receiverDead = false; // Reset the receiverDead flag when the session ends
       }
       console.log('Session is alive?: ', isAlive);
     }

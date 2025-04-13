@@ -708,11 +708,15 @@
             
             // Update date/time display
             const monthName = MONTHS_LIST[currentMonthNum];
-            const timeStr = date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' });
+            const timeStr = date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
             const sortableTime = getSortableTimeString(timeStr);
             const sortableDate = `${dayIdx}${sortableTime}`;
             
-            document.getElementById("time").textContent = timeStr.replace("M00:", "M12:");
+            document.getElementById("time").textContent = timeStr;
             document.getElementById("day").textContent = currentDayName;
             document.getElementById("date").textContent = `${monthName} ${currentDayOfMonth}`;
             
