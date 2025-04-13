@@ -81,6 +81,46 @@ The application has a two-column layout:
 This is a static web application hosted on GitHub Pages at:
 https://briandherbert.github.io/
 
+## Chromecast Implementation
+
+The application includes Chromecast support to display routines on any TV or monitor with a Chromecast device. This implementation has some specific requirements to function correctly:
+
+### Key Components
+
+- **Separate Sender File**: The casting functionality is intentionally isolated in `sender.html` that is included as an iframe in the main application.
+
+- **Application ID**: Uses a specific application ID (`5CB45E5A`) that works with a custom URL Cast Receiver.
+
+- **Cast URL**: The application casts a hardcoded URL (`https://briandherbert.github.io/`) to the Chromecast device.
+
+- **Communication Protocol**: Uses the `urn:x-cast:com.url.cast` namespace for messaging with the receiver.
+
+### Important Implementation Details
+
+1. **URL Hardcoding**: The implementation requires the exact URL `https://briandherbert.github.io/` to be cast. Any modifications to this URL may cause the cast to fail.
+
+2. **Session Timing**: There's a 6-second delay between establishing a cast session and sending the URL to give the receiver time to initialize.
+
+3. **Receiver Communication**: After sending the URL, the sender marks the receiver as "unresponsive" by design, as the receiver will handle all further interaction independently.
+
+4. **Modifications Caution**: When modifying the Chromecast functionality, maintain these specific parameters to ensure compatibility with the custom receiver.
+
+### Troubleshooting Cast Issues
+
+If casting isn't working:
+
+1. Ensure you're not modifying the hardcoded `CAST_URL` value in `sender.html`
+2. Check that the iframe is properly including `sender.html` in the main page
+3. Verify that your browser has permission to use Cast functionality
+4. Check browser console for any Cast API errors
+
+### Custom Development Workflow
+
+For local development:
+1. Make your changes and test the main functionality locally
+2. When testing cast functionality, use the GitHub Pages version as the source of truth
+3. If you need to test casting of local changes, consider implementing a query parameter approach that loads local content while still using the required hardcoded URL
+
 ## Future Enhancements (TODOs)
 
 As noted in notes.txt:
