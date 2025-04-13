@@ -31,6 +31,23 @@ The application reads data from a Google Spreadsheet published as CSV:
   - Time: When the routine starts (e.g., "8:00 AM")
   - URL: Link to content to display (typically Google Slides)
 
+### Important: Publishing Your Google Sheet
+
+For this application to work correctly, your Google Sheet **must** be published to the web:
+
+1. In your Google Sheet, go to File > Share > Publish to web
+2. Under "Link", select the sheet you want to share
+3. For "Publish content as", select "Comma-separated values (.csv)"
+4. Click "Publish" and copy the URL
+5. The URL should end with "/pub?output=csv" - this is required for the application to fetch the data
+
+This publishing step is critical because:
+- It makes your data accessible without authentication
+- It provides the data in CSV format that the application can parse
+- It avoids CORS (Cross-Origin Resource Sharing) issues that would prevent data loading on some devices
+
+Note that any changes to your published Google Sheet may take a few minutes to be reflected in the application.
+
 ### Special Features
 
 - **Day Parsing**: Supports various day formats including:

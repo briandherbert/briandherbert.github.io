@@ -346,6 +346,18 @@
             console.log("Application started. URL: " + window.location.href);
             initDate();
             loadData();
+            
+            // Check if this is a receiver view and hide the cast button if needed
+            if (window.location.href.includes('is_receiver=true')) {
+                console.log("Receiver mode detected, hiding cast button");
+                const castIframe = document.querySelector('iframe[src="sender.html"]');
+                if (castIframe) {
+                    castIframe.style.display = 'none';
+                }
+                
+                // Also add some additional space optimization for receiver view
+                document.querySelector('.topheight').style.height = '10px';
+            }
         };
 
         // Initialize date variables
