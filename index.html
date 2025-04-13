@@ -339,9 +339,10 @@
         let isSoundEnabled = false;
 
         // Chromecast variables
-        const applicationID = 'CC1AD845'; // Default web receiver app ID
+        const applicationID = '5CB45E5A'; // Application ID from the working version
         const namespace = 'urn:x-cast:com.url.cast';
         let session = null;
+        let receiverDead = false;
         
         // Initialize Cast API when the framework is loaded
         window['__onGCastApiAvailable'] = function(isAvailable) {
@@ -387,8 +388,8 @@
             
             // Send URL to cast device after a delay
             setTimeout(function() {
-                loadWebPage(CAST_URL);
-            }, 1000);
+                sendMessage({ type: 'loc', url: CAST_URL });
+            }, 6000);
         }
 
         // Handle receiver availability
@@ -415,36 +416,26 @@
             console.log('Received message from cast receiver:', msg);
         }
 
-        // Load a web page on the Chromecast
-        function loadWebPage(url) {
-            console.log('Loading web page on Chromecast:', url);
+        // Send message to cast receiver
+        function sendMessage(msg) {
+            if (receiverDead || !session) return;
             
-            // Create a media info object for the URL
-            const mediaInfo = new chrome.cast.media.MediaInfo(url, 'text/html');
-            
-            // Create load request
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-            
-            // Load the media
-            session.loadMedia(
-                request,
-                onMediaLoadSuccess,
-                onMediaLoadError
+            session.sendMessage(
+                namespace,
+                msg,
+                function() {
+                    console.log('Message sent to cast device:', msg);
+                    notify('Message sent: ' + JSON.stringify(msg));
+                },
+                onCastError
             );
+            
+            if (msg.type === 'loc') {
+                receiverDead = true;
+                notify('Cast receiver will now be unresponsive');
+            }
         }
         
-        // Handle media load success
-        function onMediaLoadSuccess(mediaSession) {
-            console.log('Media loaded successfully:', mediaSession);
-            notify('Web page loaded on Chromecast');
-        }
-        
-        // Handle media load error
-        function onMediaLoadError(error) {
-            console.error('Error loading media:', error);
-            showError('Failed to load web page on Chromecast: ' + error.message);
-        }
-
         // ===== Initialization =====
         window.onload = function() {
             console.log("Application started. URL: " + window.location.href);
