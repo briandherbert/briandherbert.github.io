@@ -321,7 +321,8 @@
         const CSV_IDX_URL = 3;
         
         // Google Sheet URL - using the published CSV output format
-        const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv";
+        const SHEET_ID = "1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A";
+        const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
         const DOORBELL_SOUND_URL = "https://creative-tech-misc.s3.amazonaws.com/routiner/doorbell.mp3";
 
         // ===== State Variables =====
@@ -367,8 +368,14 @@
             const dataUrl = `${SPREADSHEET_URL}&cacheBust=${Math.random().toString()}`;
             console.log("Fetching data from URL:", dataUrl);
             
-            // Fetch data from spreadsheet
-            fetch(dataUrl)
+            // Set a timeout for the fetch operation
+            const fetchPromise = fetch(dataUrl);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("Request timed out")), 10000);
+            });
+            
+            // Race between fetch and timeout
+            Promise.race([fetchPromise, timeoutPromise])
                 .then(response => {
                     console.log("Response status:", response.status);
                     if (!response.ok) {
@@ -379,11 +386,12 @@
                 .then(data => {
                     console.log("Data received, length:", data.length);
                     if (!data || data.trim() === "") {
-                        const error = new Error("Empty data received from Google Sheet");
-                        console.error(error);
-                        showError({ message: "Failed to load routines: Empty data received from Google Sheet" });
-                        return;
+                        throw new Error("Empty data received from Google Sheet");
                     }
+                    
+                    // Log the first few lines of the CSV data for debugging
+                    const firstLines = data.split('\n').slice(0, 3).join('\n');
+                    console.log("CSV data preview:", firstLines);
                     
                     setDisplayRoutineName("Processing...");
                     processData(data);
@@ -393,7 +401,9 @@
                 })
                 .catch(error => {
                     console.error("Error fetching data:", error);
-                    showError({ message: `Failed to load routines: ${error.message}. Please check your internet connection and try again.` });
+                    const errorMessage = `Failed to load routines from Google Sheet: ${error.message}`;
+                    console.log(errorMessage);
+                    showError({ message: errorMessage });
                     setDisplayRoutineName("Error loading routines");
                 });
         }
@@ -411,14 +421,14 @@
             const allTextLines = csvText.split(/\r\n|\n/);
             console.log("CSV lines:", allTextLines);
             
-            const headers = allTextLines[0].split(',');
+            const headers = allTextLines[0].split(",");
             console.log("CSV headers:", headers);
             
             const lines = [];
             
             // Process each line of CSV
             for (let i = 1; i < allTextLines.length; i++) {
-                const data = allTextLines[i].split(',');
+                const data = allTextLines[i].split(",");
                 console.log(`Line ${i} data:`, data);
                 
                 // Skip empty lines
