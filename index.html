@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time-Triggered Routines</title>
+    <title>Routine Dashboard</title>
     <style>
         /* Global Styles */
         :root {
@@ -327,15 +327,8 @@
         // Google Sheet URL - using the published CSV output format
         const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv";
         const DOORBELL_SOUND_URL = "https://creative-tech-misc.s3.amazonaws.com/routiner/doorbell.mp3";
-        const CAST_URL = window.location.href;
+        const CAST_URL = window.location.href; // Use current URL instead of hardcoded GitHub Pages URL
 
-        // Fallback data in case the Google Sheet fails to load
-        const FALLBACK_DATA = `Name,Days,Time,Url
-School morning,week,8:00 AM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
-Bedtime,week,7:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
-Church,su,8:30 AM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p
-Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhPMOeeOOz4Go9VptapH-WQ3E-IzL0WS4/edit#slide=id.p`;
-        
         // ===== State Variables =====
         let events = [];
         let specials = [];
@@ -346,11 +339,10 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
         let isSoundEnabled = false;
 
         // Chromecast variables
-        const applicationID = 'CC1AD845'; // Default media receiver app ID
+        const applicationID = 'CC1AD845'; // Default web receiver app ID
         const namespace = 'urn:x-cast:com.url.cast';
         let session = null;
-        let receiverDead = false;
-
+        
         // Initialize Cast API when the framework is loaded
         window['__onGCastApiAvailable'] = function(isAvailable) {
             if (isAvailable) {
@@ -395,8 +387,8 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
             
             // Send URL to cast device after a delay
             setTimeout(function() {
-                sendMessage({ type: 'loc', url: CAST_URL });
-            }, 6000);
+                loadWebPage(CAST_URL);
+            }, 1000);
         }
 
         // Handle receiver availability
@@ -423,24 +415,34 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
             console.log('Received message from cast receiver:', msg);
         }
 
-        // Send message to cast receiver
-        function sendMessage(msg) {
-            if (receiverDead || !session) return;
+        // Load a web page on the Chromecast
+        function loadWebPage(url) {
+            console.log('Loading web page on Chromecast:', url);
             
-            session.sendMessage(
-                namespace,
-                msg,
-                function() {
-                    console.log('Message sent to cast device:', msg);
-                    notify('Message sent: ' + JSON.stringify(msg));
-                },
-                onCastError
+            // Create a media info object for the URL
+            const mediaInfo = new chrome.cast.media.MediaInfo(url, 'text/html');
+            
+            // Create load request
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            
+            // Load the media
+            session.loadMedia(
+                request,
+                onMediaLoadSuccess,
+                onMediaLoadError
             );
-            
-            if (msg.type === 'loc') {
-                receiverDead = true;
-                notify('Cast receiver will now be unresponsive');
-            }
+        }
+        
+        // Handle media load success
+        function onMediaLoadSuccess(mediaSession) {
+            console.log('Media loaded successfully:', mediaSession);
+            notify('Web page loaded on Chromecast');
+        }
+        
+        // Handle media load error
+        function onMediaLoadError(error) {
+            console.error('Error loading media:', error);
+            showError('Failed to load web page on Chromecast: ' + error.message);
         }
 
         // ===== Initialization =====
@@ -498,8 +500,10 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
                 .then(data => {
                     console.log("Data received, length:", data.length);
                     if (!data || data.trim() === "") {
-                        console.warn("Empty data received from Google Sheet, using fallback data");
-                        data = FALLBACK_DATA;
+                        const error = new Error("Empty data received from Google Sheet");
+                        console.error(error);
+                        showError({ message: "Failed to load routines: Empty data received from Google Sheet" });
+                        return;
                     }
                     
                     setDisplayRoutineName("Processing...");
@@ -510,13 +514,8 @@ Chore ceremony,sa,12:00 PM,https://docs.google.com/presentation/d/1HzSU8VvqoThhP
                 })
                 .catch(error => {
                     console.error("Error fetching data:", error);
-                    showError({ message: "Failed to load data from Google Sheet. Using fallback data." });
-                    
-                    // Use fallback data if the fetch fails
-                    console.log("Using fallback data due to error");
-                    processData(FALLBACK_DATA);
-                    update();
-                    setInterval(update, 60000);
+                    showError({ message: `Failed to load routines: ${error.message}. Please check your internet connection and try again.` });
+                    setDisplayRoutineName("Error loading routines");
                 });
         }
 
