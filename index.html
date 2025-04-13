@@ -280,13 +280,13 @@
         </div>
 
         <!-- Right Column (Main Content) -->
-        <div class="column right">
+        <div class="column right" style="background-color:var(--bg-color)">
             <div id="routine">
-                <!-- Cast Button -->
-                <div class="cast-container">
-                    <button id="castButton">Cast</button>
-                </div>
+                <!-- Cast button iframe -->
+                <iframe src="sender.html" height="40" width="60"
+                    style="border:0; float: right; padding: 10px; background: transparent;"></iframe>
 
+                <div class="topheight"></div>
                 <div id="routineName">Loading</div>
 
                 <!-- Main Content Frame -->
@@ -300,9 +300,6 @@
 
     <!-- Notifications Container -->
     <div id="notifications"></div>
-
-    <!-- Google Cast API -->
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
     <script>
         /**
@@ -327,7 +324,6 @@
         // Google Sheet URL - using the published CSV output format
         const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1_dIMHuBOkZdQ08XwRWkF5KZvlkm5hmRB8TaKQ_SpA5A/pub?output=csv";
         const DOORBELL_SOUND_URL = "https://creative-tech-misc.s3.amazonaws.com/routiner/doorbell.mp3";
-        const CAST_URL = window.location.href; // Use current URL instead of hardcoded GitHub Pages URL
 
         // ===== State Variables =====
         let events = [];
@@ -338,125 +334,18 @@
         let currentMonthNum = 0;
         let isSoundEnabled = false;
 
-        // Chromecast variables
-        const applicationID = '5CB45E5A'; // Application ID from the working version
-        const namespace = 'urn:x-cast:com.url.cast';
-        let session = null;
-        let receiverDead = false;
-        
         // Initialize Cast API when the framework is loaded
         window['__onGCastApiAvailable'] = function(isAvailable) {
             if (isAvailable) {
-                initializeCastApi();
+                console.log('Cast framework is available');
             }
         };
 
-        // Initialize the Cast API
-        function initializeCastApi() {
-            const sessionRequest = new chrome.cast.SessionRequest(applicationID);
-            
-            const apiConfig = new chrome.cast.ApiConfig(
-                sessionRequest,
-                sessionListener,
-                receiverListener
-            );
-            
-            chrome.cast.initialize(
-                apiConfig,
-                onCastSuccess.bind(this, 'Cast API initialized'),
-                onCastError
-            );
-        }
-
-        // Handle cast errors
-        function onCastError(err) {
-            console.error('Cast Error:', err);
-            showError(err);
-        }
-
-        // Handle cast success
-        function onCastSuccess(msg) {
-            console.log('Cast Success:', msg);
-        }
-
-        // Handle new cast session
-        function sessionListener(newSession) {
-            console.log('New cast session ID:', newSession.sessionId);
-            session = newSession;
-            session.addUpdateListener(sessionUpdateListener);
-            session.addMessageListener(namespace, receiveMessage);
-            
-            // Send URL to cast device after a delay
-            setTimeout(function() {
-                sendMessage({ type: 'loc', url: CAST_URL });
-            }, 6000);
-        }
-
-        // Handle receiver availability
-        function receiverListener(availability) {
-            if (availability === 'available') {
-                console.log('Chromecast receiver found');
-                document.getElementById('castButton').style.display = 'block';
-            } else {
-                console.log('No Chromecast receivers found');
-                document.getElementById('castButton').style.display = 'none';
-            }
-        }
-
-        // Handle session updates
-        function sessionUpdateListener(isAlive) {
-            if (!isAlive) {
-                session = null;
-            }
-            console.log('Cast session is alive:', isAlive);
-        }
-
-        // Handle messages from receiver
-        function receiveMessage(namespace, msg) {
-            console.log('Received message from cast receiver:', msg);
-        }
-
-        // Send message to cast receiver
-        function sendMessage(msg) {
-            if (receiverDead || !session) return;
-            
-            session.sendMessage(
-                namespace,
-                msg,
-                function() {
-                    console.log('Message sent to cast device:', msg);
-                    notify('Message sent: ' + JSON.stringify(msg));
-                },
-                onCastError
-            );
-            
-            if (msg.type === 'loc') {
-                receiverDead = true;
-                notify('Cast receiver will now be unresponsive');
-            }
-        }
-        
         // ===== Initialization =====
         window.onload = function() {
             console.log("Application started. URL: " + window.location.href);
             initDate();
             loadData();
-            
-            // Set up cast button click handler
-            document.getElementById('castButton').addEventListener('click', function() {
-                if (chrome.cast && chrome.cast.requestSession) {
-                    chrome.cast.requestSession(sessionListener, onCastError);
-                } else {
-                    console.error('Cast API not initialized');
-                    showError('Cast API not initialized');
-                }
-            });
-            
-            // Prevent Chromecast timeout
-            window._setTimeout = window.setTimeout;
-            window.setTimeout = function(a, b) {
-                // Disable setTimeout so Chromecast won't kill us after 5 minutes
-            };
         };
 
         // Initialize date variables

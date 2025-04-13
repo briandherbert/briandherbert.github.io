@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>URL Cast</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background-color: #000;
+    }
+    
+    button {
+      border: 0;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 8px 12px;
+      background: #333;
+      color: #AAA;
+      cursor: pointer;
+    }
+    
+    button:focus {
+      outline: none;
+    }
+    
+    button:active {
+      outline: none;
+      border-color: #8ecaed;
+      box-shadow: 0 0 5px #8ecaed;
+    }
+    
+    #notifications {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+    }
+    
+    .notification {
+      background: #222;
+      color: #FFF;
+      padding: 13px 20px;
+      margin: 10px;
+      border-radius: 2px;
+    }
+    
+    .error {
+      background: #e64a4a;
+      color: #FFF;
+      padding: 13px 20px;
+      margin: 10px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrapper">
+    <button id="requestSession">Cast</button>
+  </div>
+
+  <div id="notifications"></div>
+
+  <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+  <script type="text/javascript">
+    // Get the parent URL for casting
+    const CAST_URL = window.parent.location.href;
+    
+    // click handlers
+    document.getElementById('requestSession').onclick = function() {
+      chrome.cast.requestSession(sessionListener, onErr);
+    };
+
+    const applicationID = '5CB45E5A';
+    const namespace = 'urn:x-cast:com.url.cast';
+    let receiverDead = false;
+    let session = null;
+
+    // initialize
+    window.__onGCastApiAvailable = function(loaded) {
+      if (loaded) initializeCastApi();
+    };
+
+    function initializeCastApi() {
+      const sessionRequest = new chrome.cast.SessionRequest(applicationID);
+      
+      const apiConfig = new chrome.cast.ApiConfig(
+        sessionRequest,
+        sessionListener,
+        receiverListener
+      );
+      
+      chrome.cast.initialize(
+        apiConfig,
+        onSuccess.bind(this, 'initialized ok'),
+        onErr
+      );
+    }
+
+    function onErr(err) {
+      console.log('Error: ' + JSON.stringify(err));
+      showError(err);
+    }
+
+    function onSuccess(msg) {
+      console.log('Success: ' + msg);
+    }
+
+    function sessionListener(newSession) {
+      console.log('New session ID: ' + newSession.sessionId);
+      session = newSession;
+      session.addUpdateListener(sessionUpdateListener);
+      session.addMessageListener(namespace, receiveMessage);
+      
+      setTimeout(function() {
+        sendMessage({ type: 'loc', url: CAST_URL });
+      }, 6000);
+    }
+
+    function receiverListener(e) {
+      if (e === 'available') {
+        console.log('Chromecast receiver found');
+        document.getElementById('requestSession').style.display = 'block';
+      } else {
+        console.log('No Chromecast receivers found');
+        document.getElementById('requestSession').style.display = 'none';
+      }
+    }
+
+    function sessionUpdateListener(isAlive) {
+      if (!isAlive) {
+        session = null;
+      }
+      console.log('Session is alive?: ' + isAlive);
+    }
+
+    function receiveMessage(namespace, msg) {
+      console.log('Receiver said: ' + msg);
+    }
+
+    function sendMessage(msg) {
+      if (receiverDead || !session) return;
+      
+      session.sendMessage(
+        namespace,
+        msg,
+        function() {
+          console.log('Message sent: ', msg);
+          notify('Message sent: ' + JSON.stringify(msg));
+        },
+        onErr
+      );
+      
+      if (msg.type === 'loc') {
+        receiverDead = true;
+        notify('Receiver will now be unresponsive');
+      }
+    }
+
+    function notify(msg) {
+      const el = document.getElementById('notifications');
+      const notice = document.createElement('div');
+      
+      notice.className = 'notification';
+      notice.innerHTML = msg;
+      
+      el.appendChild(notice);
+      
+      // notice self destruct timer
+      setTimeout(function() {
+        el.removeChild(notice);
+      }, 8000);
+    }
+
+    function showError(err) {
+      const el = document.getElementById('notifications');
+      const notice = document.createElement('div');
+      
+      notice.className = 'error';
+      notice.innerHTML = 'Got error!: ' + JSON.stringify(err);
+      
+      el.appendChild(notice);
+      
+      // notice self destruct timer
+      setTimeout(function() {
+        el.removeChild(notice);
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
