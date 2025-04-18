@@ -8,6 +8,8 @@ Google Sheets is an ideal way to make these webpages, since each slide gets its 
 
 You can tack on a slide when you need a new routine, paste in photos, and you can disable slides in the google sheet with a '-'. When school is out, just put a '-' in the days column for school routines. Note that I sometimes have work-in-progress images off to the side that won't show up until I move them onto the slide.
 
+![Routines Dashboard Screenshot](assets/routinerBedtime.png)
+
 ## Overview
 
 This application serves as a digital routine display system that:

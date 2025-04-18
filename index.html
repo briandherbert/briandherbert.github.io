@@ -55,7 +55,7 @@
         }
 
         .topheight {
-            height: 50px;
+            height: 20px;
         }
 
         /* Text Styles */
@@ -82,15 +82,28 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-            padding: 20px;
+            padding: 10px;
+            margin: 0;
+            text-align: center;
+            width: 100%;
+            padding: 0 60px;
         }
 
         #routineName {
             font-size: 40px;
             font-weight: bold;
-            margin: 20px 0;
+            margin: 0;
             text-align: center;
             width: 100%;
+        }
+
+        /* Header Container */
+        .header-container {
+            align-items: center;
+            width: 100%;
+            margin-bottom: 5px;
+            position: relative;
+            padding: 10px 0;
         }
 
         /* Sidebar Content */
@@ -126,7 +139,7 @@
             flex: 1;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* Align item (iframe) to the top */
             overflow: hidden;
             position: relative;
         }
@@ -153,8 +166,9 @@
         /* Cast Button Styles */
         .cast-container {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
             z-index: 10;
         }
 
@@ -282,11 +296,13 @@
         <!-- Right Column (Main Content) -->
         <div class="column right" style="background-color:var(--bg-color)">
             <div id="routine">
-                <iframe src="sender.html" height="35" width="54"
-                    style="border:0px; float: right; padding: 10;"></iframe>
-
+                <div class="header-container">
+                    <div id="routineName">Loading</div>
+                    <div class="cast-container">
+                        <button type="button" id="castButton" aria-label="Cast button">CAST</button>
+                    </div>
+                </div>
                 <div class="topheight"></div>
-                <div id="routineName">Loading</div>
 
                 <!-- Main Content Frame -->
                 <div class="content-frame-container">
