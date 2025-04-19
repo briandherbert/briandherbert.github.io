@@ -89,21 +89,24 @@
             padding: 0 60px;
         }
 
-        #routineName {
-            font-size: 40px;
-            font-weight: bold;
-            margin: 0;
-            text-align: center;
-            width: 100%;
-        }
-
         /* Header Container */
         .header-container {
+            display: flex;
             align-items: center;
+            justify-content: center;
             width: 100%;
             margin-bottom: 5px;
             position: relative;
-            padding: 10px 0;
+            padding: 10px 0 0 0;
+        }
+
+        #routineName {
+            flex: 1;
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            margin: 0;
+            width: 100%;
         }
 
         /* Sidebar Content */
@@ -161,36 +164,6 @@
             width: 100%;
             height: 100%;
             border-radius: 8px;
-        }
-
-        /* Cast Button Styles */
-        .cast-container {
-            position: absolute;
-            top: 50%;
-            right: 0;
-            transform: translateY(-50%);
-            z-index: 10;
-        }
-
-        #castButton {
-            border: 0;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 8px 12px;
-            background: #333;
-            color: #AAA;
-            cursor: pointer;
-        }
-
-        #castButton:hover {
-            background: #444;
-        }
-
-        #castButton:active {
-            outline: none;
-            border-color: #8ecaed;
-            box-shadow: 0 0 5px #8ecaed;
         }
 
         /* Sound Button */
@@ -298,15 +271,10 @@
             <div id="routine">
                 <div class="header-container">
                     <div id="routineName">Loading</div>
-                    <div class="cast-container">
-                        <button type="button" id="castButton" aria-label="Cast button">CAST</button>
-                    </div>
+                    <iframe src="sender.html" height="35" width="54" style="border:0; margin-left:auto; background:transparent;" title="Cast"></iframe>
                 </div>
-                <div class="topheight"></div>
-
-                <!-- Main Content Frame -->
                 <div class="content-frame-container">
-                    <iframe id="contentFrame" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+                    <iframe id="contentFrame" src="" allowfullscreen></iframe>
                     <div class="footer-overlay"></div>
                 </div>
             </div>
